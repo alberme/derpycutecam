@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
   textBase: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#1E1E1E"
   },
 
   // 🔵 Primary

@@ -1,34 +1,31 @@
+import ThemedButton from "@/components/ThemedButton";
 import ThemedText from "@/components/ThemedText";
 import ThemedView from "@/components/ThemedView";
-import { Pressable, StyleSheet } from "react-native";
-
+import { StyleSheet} from "react-native";
+import {Image} from 'expo-image';
 import { useRouter } from "expo-router";
 
 export default function Index() {
   const router = useRouter();
+  const blurhash =
+  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
+
 
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <ThemedView style={{ alignItems: "center", flexDirection: "column" }}>
-        <ThemedText type="title">derpycutecam</ThemedText>
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={() => router.push("/")}
-        >
-          <ThemedText style={styles.buttonText}>Go to Next Screen</ThemedText>
-        </Pressable>
+
+      <ThemedView style={{ flex: 1, backgroundColor: "black", alignItems: "center", flexDirection: "column", }}>
+        <Image
+          source={require('@/assets/images/logo.png')}
+          placeholder={{blurhash}}
+          contentFit="scale-down"
+          style={styles.image}
+          transition={1000}
+        />
+        <ThemedButton title="hoiiiiiiiiii" style={styles.button} variant="secondary" onPress={() => router.push("/")} />
       </ThemedView>
-    </ThemedView>
+
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -37,15 +34,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  title: {
-    fontSize: 22,
-    marginBottom: 20,
+  image: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#0553'
   },
   button: {
-    backgroundColor: "#4F46E5", // Indigo-600
+    backgroundColor: "#FFFFFF",
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 10,
+    marginVertical: 24,
+    borderRadius: 50,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
