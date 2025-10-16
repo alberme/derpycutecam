@@ -4,7 +4,14 @@ import { StyleSheet, Text, type TextProps } from "react-native";
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "default" | "title" | "defaultSemiBold" | "subtitle" | "link";
+  type?:
+    | "default"
+    | "title"
+    | "defaultSemiBold"
+    | "subtitle"
+    | "link"
+    | "xl"
+    | "xxl";
 };
 
 export default function ThemedText({
@@ -25,6 +32,8 @@ export default function ThemedText({
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
         type === "subtitle" ? styles.subtitle : undefined,
         type === "link" ? styles.link : undefined,
+        type === "xl" ? styles.xl : undefined,
+        type === "xxl" ? styles.xxl : undefined,
         style,
       ]}
       {...rest}
@@ -55,5 +64,15 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     fontSize: 16,
     color: "#0a7ea4",
+  },
+  xl: {
+    fontSize: 40,
+    fontWeight: "bold",
+    lineHeight: 40,
+  },
+  xxl: {
+    fontSize: 60,
+    fontWeight: "bold",
+    lineHeight: 60,
   },
 });

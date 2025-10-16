@@ -23,7 +23,7 @@ interface CustomButtonProps {
   disabled?: boolean;
 }
 
-export default function CustomButton({
+export default function ThemedButton({
   title,
   onPress,
   variant = "primary",
@@ -85,13 +85,13 @@ export default function CustomButton({
 const styles = StyleSheet.create({
   base: {
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingHorizontal: 24,
+    borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 3,
   },
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   textBase: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1E1E1E"
+    color: "#1E1E1E",
   },
 
   // 🔵 Primary
