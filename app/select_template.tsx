@@ -15,17 +15,31 @@ import {
 } from "react-native";
 
 type slideDirectionType = "left" | "right";
+type TemplateKey = keyof typeof TEMPLATE_IMAGES; // "1" | "3" | "6"
+type TemplateImages = (typeof TEMPLATE_IMAGES)[TemplateKey][number]; // individual image type
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
-const templateImages = [
-  require("@/assets/images/templates/1/black_1.png"),
-  require("@/assets/images/templates/1/purple_1.png"),
-  require("@/assets/images/templates/1/green_1.png"),
-];
+const TEMPLATE_IMAGES = {
+  1: [
+    require("@/assets/images/templates/1/black_1.png"),
+    require("@/assets/images/templates/1/purple_1.png"),
+    require("@/assets/images/templates/1/green_1.png"),
+  ],
+  3: [
+    require("@/assets/images/templates/3/black_3.png"),
+    require("@/assets/images/templates/3/purple_3.png"),
+    require("@/assets/images/templates/3/green_3.png"),
+  ],
+  6: [
+    require("@/assets/images/templates/6/black_6.png"),
+    require("@/assets/images/templates/6/purple_6.png"),
+    require("@/assets/images/templates/6/green_6.png"),
+  ],
+} as const;
 
 export default function SelectTemplate() {
-  const { type: template } = useLocalSearchParams();
-  const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0);
+  const { type: selectedTemplateIndex } = useLocalSearchParams();
+  const [currentFrameIndex, setCurrentTemplateIndex] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
   const panResponder = useRef(
     PanResponder.create({
@@ -51,6 +65,8 @@ export default function SelectTemplate() {
   ).current;
   const slideTo = (direction: slideDirectionType) => {
     const toValue = direction === "left" ? -WINDOW_WIDTH : WINDOW_WIDTH;
+    const templateImages =
+      TEMPLATE_IMAGES[selectedTemplateIndex as unknown as TemplateKey];
 
     Animated.timing(translateX, {
       toValue,
@@ -73,13 +89,13 @@ export default function SelectTemplate() {
       translateX.setValue(0);
     });
     return () => cancelAnimationFrame(raf);
-  }, [currentTemplateIndex, translateX]);
+  }, [currentFrameIndex, translateX]);
 
   return (
     <ScreenView>
       <ContainerView style={styles.themedScreen}>
         <ThemedText style={styles.text} type="title">
-          Select A Template! {template}
+          Select A Template! {selectedTemplateIndex}
         </ThemedText>
         <ContainerView style={[styles.themedScreen, styles.frameContainer]}>
           <TouchableOpacity style={styles.arrowButton} onPress={handlePrev}>
@@ -93,7 +109,11 @@ export default function SelectTemplate() {
             style={{ transform: [{ translateX }] }}
           >
             <Image
-              source={templateImages[currentTemplateIndex]}
+              source={
+                TEMPLATE_IMAGES[
+                  selectedTemplateIndex as unknown as TemplateKey
+                ][currentFrameIndex]
+              }
               style={styles.frameImage}
               contentFit="scale-down"
             />
