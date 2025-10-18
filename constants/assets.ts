@@ -41,5 +41,3 @@ export const PHOTO_FRAME_IMAGES = Object.fromEntries(
     ),
   ])
 ) as Record<PhotoFrameCount, PhotoTemplateByColor>;
-
-console.log("PHOTO_FRAME_IMAGES loaded:", PHOTO_FRAME_IMAGES);
