@@ -1,12 +1,18 @@
-import type { PhotoFrameColor, PhotoFrameCount } from "@/types/template";
-import { Asset } from "expo-asset";
-// Define valid template keys and color variants
-
-// Preload static requires (these must remain static for Metro)
-const PHOTO_FRAME_MODULES: Record<
+import type {
+  PhotoFrameColor,
   PhotoFrameCount,
-  Record<PhotoFrameColor, any>
-> = {
+  PhotoTemplateByColor,
+} from "@/types/photo_frame";
+import { Asset } from "expo-asset";
+
+export const PHOTO_FRAME_COUNTS: PhotoFrameCount[] = [1, 3, 6];
+export const PHOTO_FRAME_COLORS: PhotoFrameColor[] = [
+  "black",
+  "purple",
+  "green",
+];
+
+const PHOTO_FRAME_MODULES = {
   1: {
     black: require("@/assets/images/templates/1/black_1.png"),
     purple: require("@/assets/images/templates/1/purple_1.png"),
@@ -24,15 +30,16 @@ const PHOTO_FRAME_MODULES: Record<
   },
 };
 
-// Build typed Asset map
-export const PHOTO_FRAME_IMAGES: Record<PhotoFrameCount, Asset[]> = {
-  1: [],
-  3: [],
-  6: [],
-};
+export const PHOTO_FRAME_IMAGES = Object.fromEntries(
+  Object.entries(PHOTO_FRAME_MODULES).map(([count, colorMap]) => [
+    Number(count),
+    Object.fromEntries(
+      Object.entries(colorMap).map(([color, mod]) => [
+        color,
+        Asset.fromModule(mod),
+      ])
+    ),
+  ])
+) as Record<PhotoFrameCount, PhotoTemplateByColor>;
 
-for (const count of [1, 3, 6] as const) {
-  PHOTO_FRAME_IMAGES[count] = (
-    Object.values(PHOTO_FRAME_MODULES[count]) as any[]
-  ).map((mod) => Asset.fromModule(mod));
-}
+console.log("PHOTO_FRAME_IMAGES loaded:", PHOTO_FRAME_IMAGES);
