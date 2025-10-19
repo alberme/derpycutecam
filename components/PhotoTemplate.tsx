@@ -1,3 +1,4 @@
+import type { PhotoFrameCount } from "@/types/photo_frame";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
@@ -9,19 +10,17 @@ import {
   View,
 } from "react-native";
 
-type TemplateType = 1 | 3 | 6;
-
-interface PhotoTemplateProps {
-  type: TemplateType;
+interface PhotoFrameProps {
+  frameCount: PhotoFrameCount;
   images?: (string | ImageSourcePropType)[];
   onChange?: (images: (string | ImageSourcePropType)[]) => void;
 }
 
 export default function PhotoTemplate({
-  type,
+  frameCount: type,
   images = [],
   onChange,
-}: PhotoTemplateProps) {
+}: PhotoFrameProps) {
   const [localImages, setLocalImages] =
     useState<(string | ImageSourcePropType)[]>(images);
 

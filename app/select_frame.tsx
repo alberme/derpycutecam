@@ -6,33 +6,34 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
-import PhotoTemplateCard, {
-  type TemplateType,
-} from "@/components/PhotoTemplateCard";
+import PhotoTemplateCard from "@/components/PhotoTemplateCard";
 import ThemedButton from "@/components/ThemedButton";
+
+import type { PhotoFrameCount } from "@/types/photo_frame";
+const FRAME_COUNTS: PhotoFrameCount[] = [1, 3, 6];
 
 export default function Select() {
   const router = useRouter();
-  const templateTypes: TemplateType[] = [1, 3, 6];
-  const [selectedTemplateIndex, setSelectedTemplateIndex] = useState(0);
+  const [selectedFrameCount, setSelectedFrameCount] =
+    useState<PhotoFrameCount>(1);
 
-  const handleCardPress = (type: TemplateType) => {
-    setSelectedTemplateIndex(type);
+  const handleCardPress = (type: PhotoFrameCount) => {
+    setSelectedFrameCount(type);
   };
 
   return (
     <ScreenView>
       <ContainerView style={{ gap: 80 }}>
-        <Text type="title">Select How Many Pictures!</Text>
+        <Text type="title">Select How Many Frames!</Text>
         <Grid columns={3} gap={60} style={{ flexDirection: "row" }}>
-          {templateTypes.map((type) => (
+          {FRAME_COUNTS.map((count) => (
             <TouchableOpacity
-              key={type}
-              style={selectedTemplateIndex === type && styles.selectedTemplate}
+              key={count}
+              style={selectedFrameCount === count && styles.selectedTemplate}
               activeOpacity={0.8}
-              onPress={() => handleCardPress(type)}
+              onPress={() => handleCardPress(count)}
             >
-              <PhotoTemplateCard key={type} type={type} />
+              <PhotoTemplateCard key={count} frameCount={count} />
             </TouchableOpacity>
           ))}
           {/* <PhotoTemplateCard type={6} /> */}
@@ -43,7 +44,7 @@ export default function Select() {
           onPress={() =>
             router.push({
               pathname: "/select_template",
-              params: { type: selectedTemplateIndex },
+              params: { selectedFrameCount },
             })
           }
         />

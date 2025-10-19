@@ -1,15 +1,14 @@
 import { Colors } from "@/constants/theme";
+import type { PhotoFrameCount } from "@/types/photo_frame";
 import { StyleSheet, View } from "react-native";
 
-export type TemplateType = 0 | 1 | 3 | 6;
-
-interface PhotoTemplateProps {
-  type: TemplateType;
+interface PhotoFrameProps {
+  frameCount: PhotoFrameCount;
 }
 
-export default function PhotoTemplateCard({ type }: PhotoTemplateProps) {
+export default function PhotoTemplateCard({ frameCount }: PhotoFrameProps) {
   const renderSlot = () => {
-    switch (type) {
+    switch (frameCount) {
       case 1:
         return <View style={[styles.slot, styles.single]} />;
 

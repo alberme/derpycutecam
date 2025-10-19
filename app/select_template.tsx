@@ -1,10 +1,11 @@
 import ContainerView from "@/components/ContainerView";
 import ScreenView from "@/components/ScreenView";
+import ThemedButton from "@/components/ThemedButton";
 import ThemedText from "@/components/ThemedText";
 
 import { Colors } from "@/constants/theme";
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -14,32 +15,26 @@ import {
   TouchableOpacity,
 } from "react-native";
 
+import { PHOTO_FRAME_IMAGES } from "@/constants/assets";
+import type {
+  PhotoFrameColor,
+  PhotoFrameCount,
+  PhotoTemplateByColor,
+} from "@/types/photo_frame";
 type slideDirectionType = "left" | "right";
-type TemplateKey = keyof typeof TEMPLATE_IMAGES; // "1" | "3" | "6"
-type TemplateImages = (typeof TEMPLATE_IMAGES)[TemplateKey][number]; // individual image type
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
-const TEMPLATE_IMAGES = {
-  1: [
-    require("@/assets/images/templates/1/black_1.png"),
-    require("@/assets/images/templates/1/purple_1.png"),
-    require("@/assets/images/templates/1/green_1.png"),
-  ],
-  3: [
-    require("@/assets/images/templates/3/black_3.png"),
-    require("@/assets/images/templates/3/purple_3.png"),
-    require("@/assets/images/templates/3/green_3.png"),
-  ],
-  6: [
-    require("@/assets/images/templates/6/black_6.png"),
-    require("@/assets/images/templates/6/purple_6.png"),
-    require("@/assets/images/templates/6/green_6.png"),
-  ],
-} as const;
 
 export default function SelectTemplate() {
-  const { type: selectedTemplateIndex } = useLocalSearchParams();
-  const [currentFrameIndex, setCurrentTemplateIndex] = useState(0);
+  const { selectedFrameCount } = useLocalSearchParams<{
+    selectedFrameCount: string;
+  }>();
+  const [selectedPhotoTemplates] = useState<PhotoTemplateByColor>(
+    PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount]
+  );
+  const [currentTemplateViewColor, setCurrentTemplateViewColor] =
+    useState<PhotoFrameColor>("black");
+  const router = useRouter();
   const translateX = useRef(new Animated.Value(0)).current;
   const panResponder = useRef(
     PanResponder.create({
@@ -65,19 +60,24 @@ export default function SelectTemplate() {
   ).current;
   const slideTo = (direction: slideDirectionType) => {
     const toValue = direction === "left" ? -WINDOW_WIDTH : WINDOW_WIDTH;
-    const templateImages =
-      TEMPLATE_IMAGES[selectedTemplateIndex as unknown as TemplateKey];
+    const templatesByColor =
+      PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount];
+    const templateColors = Object.keys(templatesByColor) as PhotoFrameColor[];
 
     Animated.timing(translateX, {
       toValue,
       duration: 250,
       useNativeDriver: true,
     }).start(() => {
-      setCurrentTemplateIndex((prev) =>
-        direction === "left"
-          ? (prev - 1 + templateImages.length) % templateImages.length
-          : (prev + 1) % templateImages.length
-      );
+      setCurrentTemplateViewColor((prev) => {
+        const templateColorIndex = templateColors.indexOf(prev);
+        return direction === "left"
+          ? templateColors[
+              (templateColorIndex - 1 + templateColors.length) %
+                templateColors.length
+            ]
+          : templateColors[(templateColorIndex + 1) % templateColors.length];
+      });
     });
   };
   const handlePrev = () => slideTo("left");
@@ -89,13 +89,13 @@ export default function SelectTemplate() {
       translateX.setValue(0);
     });
     return () => cancelAnimationFrame(raf);
-  }, [currentFrameIndex, translateX]);
+  }, [currentTemplateViewColor, translateX]);
 
   return (
     <ScreenView>
       <ContainerView style={styles.themedScreen}>
         <ThemedText style={styles.text} type="title">
-          Select A Template! {selectedTemplateIndex}
+          Select A Template!
         </ThemedText>
         <ContainerView style={[styles.themedScreen, styles.frameContainer]}>
           <TouchableOpacity style={styles.arrowButton} onPress={handlePrev}>
@@ -109,11 +109,7 @@ export default function SelectTemplate() {
             style={{ transform: [{ translateX }] }}
           >
             <Image
-              source={
-                TEMPLATE_IMAGES[
-                  selectedTemplateIndex as unknown as TemplateKey
-                ][currentFrameIndex]
-              }
+              source={selectedPhotoTemplates[currentTemplateViewColor]}
               style={styles.frameImage}
               contentFit="scale-down"
             />
@@ -125,6 +121,19 @@ export default function SelectTemplate() {
             </ThemedText>
           </TouchableOpacity>
         </ContainerView>
+        <ThemedButton
+          title="Gooo!"
+          variant="secondary"
+          onPress={() =>
+            router.push({
+              pathname: "/camera_screen",
+              params: {
+                selectedFrameCount,
+                selectedTemplateColor: currentTemplateViewColor,
+              },
+            })
+          }
+        />
       </ContainerView>
     </ScreenView>
   );
