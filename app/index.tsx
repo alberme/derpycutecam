@@ -1,6 +1,5 @@
-import ContainerView from "@/components/ContainerView";
-import ScreenView from "@/components/ScreenView";
 import ThemedButton from "@/components/ThemedButton";
+import { ContainerView, ScreenView } from "@/components/view";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";

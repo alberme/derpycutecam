@@ -1,7 +1,6 @@
-import ContainerView from "@/components/ContainerView";
-import ScreenView from "@/components/ScreenView";
 import ThemedButton from "@/components/ThemedButton";
 import ThemedText from "@/components/ThemedText";
+import { ContainerView, ScreenView } from "@/components/view";
 
 import { Colors } from "@/constants/theme";
 import { Image } from "expo-image";

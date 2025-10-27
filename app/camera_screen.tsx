@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import type { PhotoFrameColor, PhotoFrameCount } from "@/types/photo_frame";
+
 import type { Asset } from "expo-asset";
 
 export default function CameraScreen() {

@@ -1,7 +1,6 @@
-import ContainerView from "@/components/ContainerView";
 import Grid from "@/components/Grid";
-import ScreenView from "@/components/ScreenView";
 import Text from "@/components/ThemedText";
+import { ContainerView, ScreenView } from "@/components/view";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
