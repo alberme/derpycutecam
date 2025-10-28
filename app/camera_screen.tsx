@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router"; // get frame index from previous screen
 import { captureRef } from "react-native-view-shot";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -39,32 +39,6 @@ export default function CameraScreen() {
   const [mergedUri, setMergedUri] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const previewRef = useRef<View>(null);
-
-  if (!permission) {
-    // Permissions are still loading
-    return (
-      <View style={styles.centered}>
-        <Text>Requesting camera permissions...</Text>
-      </View>
-    );
-  }
-
-  if (!permission.granted) {
-    // Permission denied
-    return (
-      <View style={styles.centered}>
-        <Text style={{ textAlign: "center", marginBottom: 10 }}>
-          Camera access is required to use this feature.
-        </Text>
-        <TouchableOpacity
-          style={styles.permissionButton}
-          onPress={requestPermission}
-        >
-          <Text style={styles.buttonText}>Grant Permission</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   const startCountdown = () => {
     let count = 3;
@@ -104,6 +78,41 @@ export default function CameraScreen() {
     }
   };
 
+  useEffect(() => {
+    console.log("starting countdown");
+    const id = setTimeout(startCountdown, 3000);
+    return () => {
+      clearTimeout(id);
+      console.log("unmounted!");
+    };
+  }, []);
+
+  if (!permission) {
+    // Permissions are still loading
+    return (
+      <View style={styles.centered}>
+        <Text>Requesting camera permissions...</Text>
+      </View>
+    );
+  }
+
+  if (!permission.granted) {
+    // Permission denied
+    return (
+      <View style={styles.centered}>
+        <Text style={{ textAlign: "center", marginBottom: 10 }}>
+          Camera access is required to use this feature.
+        </Text>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestPermission}
+        >
+          <Text style={styles.buttonText}>Grant Permission</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScreenView>
       <ContainerView color="pink" style={styles.cameraContainer}>
@@ -123,14 +132,6 @@ export default function CameraScreen() {
               <View style={styles.countdownOverlay}>
                 <Text style={styles.countdownText}>{countdown}</Text>
               </View>
-            )}
-            {!countdown && (
-              <TouchableOpacity
-                style={styles.captureButton}
-                onPress={startCountdown}
-              >
-                <Text style={styles.buttonText}>Start</Text>
-              </TouchableOpacity>
             )}
           </>
         ) : mergedUri ? (
