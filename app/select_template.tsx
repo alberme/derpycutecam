@@ -2,7 +2,6 @@ import ThemedButton from "@/components/ThemedButton";
 import ThemedText from "@/components/ThemedText";
 import { ContainerView, ScreenView } from "@/components/view";
 
-import { Colors } from "@/constants/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -92,13 +91,13 @@ export default function SelectTemplate() {
 
   return (
     <ScreenView>
-      <ContainerView style={styles.themedScreen}>
-        <ThemedText style={styles.text} type="title">
+      <ContainerView color="pink">
+        <ThemedText color="black" type="title">
           Select A Template!
         </ThemedText>
-        <ContainerView style={[styles.themedScreen, styles.frameContainer]}>
+        <ContainerView color="pink" style={styles.frameContainer}>
           <TouchableOpacity style={styles.arrowButton} onPress={handlePrev}>
-            <ThemedText style={styles.text} type="xxl">
+            <ThemedText color="black" type="xxl">
               ◀
             </ThemedText>
           </TouchableOpacity>
@@ -115,7 +114,7 @@ export default function SelectTemplate() {
           </Animated.View>
 
           <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <ThemedText style={styles.text} type="xxl">
+            <ThemedText color="black" type="xxl">
               ▶
             </ThemedText>
           </TouchableOpacity>
@@ -139,10 +138,6 @@ export default function SelectTemplate() {
 }
 
 const styles = StyleSheet.create({
-  themedScreen: {
-    backgroundColor: Colors.pink,
-    paddingHorizontal: 0,
-  },
   frameContainer: {
     flex: 0,
     flexBasis: "auto",
@@ -163,8 +158,5 @@ const styles = StyleSheet.create({
   frameImage: {
     width: WINDOW_WIDTH * 0.6,
     aspectRatio: 9 / 16,
-  },
-  text: {
-    color: Colors.blackText,
   },
 });

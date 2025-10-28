@@ -5,10 +5,19 @@ import { useLocalSearchParams } from "expo-router"; // get frame index from prev
 import { captureRef } from "react-native-view-shot";
 
 import { useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
+import { ContainerView, ScreenView } from "@/components/view";
+import { Colors } from "@/constants/theme";
 import type { PhotoFrameColor, PhotoFrameCount } from "@/types/photo_frame";
 
+import ThemedText from "@/components/ThemedText";
 import type { Asset } from "expo-asset";
 
 export default function CameraScreen() {
@@ -22,6 +31,7 @@ export default function CameraScreen() {
     ]
   );
 
+  const { width, height } = useWindowDimensions();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>("front");
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -95,75 +105,81 @@ export default function CameraScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {!photoUri ? (
-        <>
-          <CameraView
-            ref={cameraRef}
-            style={styles.camera}
-            facing={facing}
-            autofocus="on"
-            mirror={true}
-          />
-          {countdown && (
-            <View style={styles.countdownOverlay}>
-              <Text style={styles.countdownText}>{countdown}</Text>
-            </View>
-          )}
-          {!countdown && (
-            <TouchableOpacity
-              style={styles.captureButton}
-              onPress={startCountdown}
-            >
-              <Text style={styles.buttonText}>Start</Text>
-            </TouchableOpacity>
-          )}
-        </>
-      ) : mergedUri ? (
-        <>
-          <Image source={{ uri: mergedUri }} style={styles.capturedImage} />
-          <TouchableOpacity
-            style={styles.retakeButton}
-            onPress={() => {
-              setPhotoUri(null);
-              setMergedUri(null);
-            }}
-          >
-            <Text style={styles.buttonText}>Retake</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <View
-            ref={previewRef}
-            collapsable={false}
-            style={styles.previewContainer}
-          >
-            <Image source={{ uri: photoUri }} style={styles.capturedImage} />
-            <Image
-              source={selectedFrameImage}
-              style={styles.frameOverlay}
-              contentFit="contain"
+    <ScreenView>
+      <ContainerView color="pink" style={styles.cameraContainer}>
+        {!photoUri ? (
+          <>
+            <ThemedText type="title" color="black" style={{ marginBottom: 40 }}>
+              Get Ready To Pose!
+            </ThemedText>
+            <CameraView
+              ref={cameraRef}
+              style={styles.camera}
+              facing={facing}
+              autofocus="on"
+              mirror={true}
             />
-          </View>
-          <TouchableOpacity style={styles.captureButton} onPress={saveMerged}>
-            <Text style={styles.buttonText}>Save with Frame</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+            {countdown && (
+              <View style={styles.countdownOverlay}>
+                <Text style={styles.countdownText}>{countdown}</Text>
+              </View>
+            )}
+            {!countdown && (
+              <TouchableOpacity
+                style={styles.captureButton}
+                onPress={startCountdown}
+              >
+                <Text style={styles.buttonText}>Start</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : mergedUri ? (
+          <>
+            <Image source={{ uri: mergedUri }} style={styles.capturedImage} />
+            <TouchableOpacity
+              style={styles.retakeButton}
+              onPress={() => {
+                setPhotoUri(null);
+                setMergedUri(null);
+              }}
+            >
+              <Text style={styles.buttonText}>Retake</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <View
+              ref={previewRef}
+              collapsable={false}
+              style={styles.previewContainer}
+            >
+              <Image source={{ uri: photoUri }} style={styles.capturedImage} />
+              <Image
+                source={selectedFrameImage}
+                style={styles.frameOverlay}
+                contentFit="contain"
+              />
+            </View>
+            <TouchableOpacity style={styles.captureButton} onPress={saveMerged}>
+              <Text style={styles.buttonText}>Save with Frame</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </ContainerView>
+    </ScreenView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
+  cameraContainer: {
+    paddingHorizontal: 100,
+    paddingVertical: 100,
+  },
+  header: {
+    backgroundColor: Colors.background.pink,
   },
   camera: {
-    position: "absolute",
+    // position: "absolute",
     width: "100%",
     height: "100%",
   },

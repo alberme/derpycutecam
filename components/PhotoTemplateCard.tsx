@@ -43,7 +43,7 @@ export default function PhotoTemplateCard({ frameCount }: PhotoFrameProps) {
 
 const styles = StyleSheet.create({
   template: {
-    backgroundColor: Colors.pink,
+    backgroundColor: Colors.background.pink,
     borderRadius: 18,
     padding: 8,
     aspectRatio: 3 / 4,

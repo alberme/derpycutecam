@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, type ColorsKey } from "@/constants/theme";
 import React, { ReactNode } from "react";
 import { ScrollView, StyleSheet, View, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,7 +8,7 @@ interface BaseViewProps {
   scrollable?: boolean;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
-  backgroundColor?: string;
+  color?: keyof ColorsKey["background"];
 }
 
 /**
@@ -21,14 +21,20 @@ export default function ScreenView({
   scrollable = false,
   style,
   contentContainerStyle,
-  backgroundColor = Colors.background,
+  color = "black",
 }: BaseViewProps) {
   const Container = scrollable ? ScrollView : View;
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: Colors.background[color] }]}
+    >
       <Container
-        style={[styles.container, { backgroundColor }, style]}
+        style={[
+          styles.container,
+          { backgroundColor: Colors.background[color] },
+          style,
+        ]}
         {...(scrollable
           ? {
               contentContainerStyle: [

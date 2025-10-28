@@ -1,5 +1,6 @@
 import ThemedButton from "@/components/ThemedButton";
 import { ContainerView, ScreenView } from "@/components/view";
+import { Colors } from "@/constants/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
@@ -11,7 +12,7 @@ export default function Index() {
 
   return (
     <ScreenView>
-      <View style={{ flex: 1, flexDirection: "row" }}>
+      <ContainerView>
         <View style={styles.pinkBar} />
         <ContainerView>
           <Image
@@ -27,17 +28,12 @@ export default function Index() {
             onPress={() => router.push("/select_frame")}
           />
         </ContainerView>
-      </View>
+      </ContainerView>
     </ScreenView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   pinkBar: {
     width: 24,
     position: "absolute",
@@ -45,14 +41,14 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     height: "100%",
-    backgroundColor: "#FFCEEE",
+    backgroundColor: Colors.background.pink,
     zIndex: 100,
   },
   image: {
-    width: "50%",
-    height: "50%",
-    minWidth: 250,
-    maxHeight: 250,
+    width: "100%",
+    height: "100%",
+    minWidth: 400,
+    maxHeight: 400,
   },
   button: {
     backgroundColor: "#FFFFFF",
