@@ -1,4 +1,4 @@
-import { PHOTO_FRAME_IMAGES } from "@/constants/assets";
+import { PHOTO_CAMERA_IMAGES, PHOTO_FRAME_IMAGES } from "@/constants/assets";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router"; // get frame index from previous screen
@@ -35,6 +35,8 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>("front");
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [showTakePictureImage, setShowTakePictureImage] =
+    useState<boolean>(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [mergedUri, setMergedUri] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
@@ -44,12 +46,12 @@ export default function CameraScreen() {
     let count = 3;
     setCountdown(count);
 
-    const timer = setInterval(() => {
+    const countdownId = setInterval(() => {
       count -= 1;
       if (count === 0) {
-        clearInterval(timer);
+        clearInterval(countdownId);
         setCountdown(null);
-        takePhoto();
+        setShowTakePictureImage(true);
       } else {
         setCountdown(count);
       }
@@ -78,6 +80,9 @@ export default function CameraScreen() {
     }
   };
 
+  const renderTakePictureOverlay = () => {};
+
+  // Start take picture countdown on mount
   useEffect(() => {
     console.log("starting countdown");
     const id = setTimeout(startCountdown, 3000);
@@ -86,6 +91,16 @@ export default function CameraScreen() {
       console.log("unmounted!");
     };
   }, []);
+
+  useEffect(() => {
+    if (showTakePictureImage) {
+      const id = setTimeout(() => {
+        takePhoto();
+        setShowTakePictureImage(false);
+      }, 5000);
+      return () => clearTimeout(id);
+    }
+  }, [showTakePictureImage]);
 
   if (!permission) {
     // Permissions are still loading
@@ -145,6 +160,33 @@ export default function CameraScreen() {
                 <Text style={styles.countdownText}>{countdown}</Text>
               </View>
             )}
+            {showTakePictureImage && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "rgba(52, 52, 52, 0.5)",
+                }}
+              >
+                <Image
+                  source={PHOTO_CAMERA_IMAGES.take_picture}
+                  contentFit="contain"
+                  transition={500}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    aspectRatio: 2 / 3,
+                    height: "40%",
+                    maxHeight: height * 0.5,
+                  }}
+                />
+              </View>
+            )}
           </>
         ) : mergedUri ? (
           <>
@@ -191,10 +233,7 @@ export default function CameraScreen() {
 }
 
 const styles = StyleSheet.create({
-  cameraContainer: {
-    paddingHorizontal: 100,
-    paddingVertical: 100,
-  },
+  cameraContainer: {},
   header: {
     backgroundColor: Colors.background.pink,
   },
@@ -206,6 +245,11 @@ const styles = StyleSheet.create({
   capturedImage: {
     width: "100%",
     height: "100%",
+  },
+  takePictureOverlay: {
+    position: "absolute",
+    top: "40%",
+    alignSelf: "center",
   },
   frameOverlay: {
     position: "absolute",

@@ -30,6 +30,14 @@ const PHOTO_FRAME_MODULES = {
   },
 };
 
+const PHOTO_CAMERA_MODULES = {
+  take_picture: require("@/assets/images/camera/take_picture.gif"),
+};
+
+export const PHOTO_CAMERA_IMAGES: Record<string, Asset> = {
+  take_picture: Asset.fromModule(PHOTO_CAMERA_MODULES.take_picture),
+};
+
 export const PHOTO_FRAME_IMAGES = Object.fromEntries(
   Object.entries(PHOTO_FRAME_MODULES).map(([count, colorMap]) => [
     Number(count),
