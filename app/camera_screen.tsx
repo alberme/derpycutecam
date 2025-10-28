@@ -115,7 +115,16 @@ export default function CameraScreen() {
 
   return (
     <ScreenView>
-      <ContainerView color="pink" style={styles.cameraContainer}>
+      <ContainerView
+        color="pink"
+        style={[
+          styles.cameraContainer,
+          {
+            paddingHorizontal: Math.min(40, width * 0.06),
+            paddingVertical: Math.min(48, height * 0.06),
+          },
+        ]}
+      >
         {!photoUri ? (
           <>
             <ThemedText type="title" color="black" style={{ marginBottom: 40 }}>
@@ -123,7 +132,10 @@ export default function CameraScreen() {
             </ThemedText>
             <CameraView
               ref={cameraRef}
-              style={styles.camera}
+              style={[
+                styles.camera,
+                { aspectRatio: 9 / 16, maxHeight: height * 0.68 },
+              ]}
               facing={facing}
               autofocus="on"
               mirror={true}
@@ -152,7 +164,14 @@ export default function CameraScreen() {
             <View
               ref={previewRef}
               collapsable={false}
-              style={styles.previewContainer}
+              style={[
+                styles.previewContainer,
+                {
+                  aspectRatio: 2 / 3,
+                  maxHeight: height * 0.68,
+                  // width: width * 0.8,
+                },
+              ]}
             >
               <Image source={{ uri: photoUri }} style={styles.capturedImage} />
               <Image
@@ -161,9 +180,9 @@ export default function CameraScreen() {
                 contentFit="contain"
               />
             </View>
-            <TouchableOpacity style={styles.captureButton} onPress={saveMerged}>
+            {/* <TouchableOpacity style={styles.captureButton} onPress={saveMerged}>
               <Text style={styles.buttonText}>Save with Frame</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </>
         )}
       </ContainerView>
@@ -225,8 +244,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   previewContainer: {
-    flex: 1,
-    width: "100%",
+    // flex: 1,
+    // width: WIDTH * 0.8,
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
