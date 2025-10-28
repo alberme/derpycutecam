@@ -1,18 +1,28 @@
-import { Colors } from "@/constants/theme";
+import { Colors, type ColorsKey } from "@/constants/theme";
 import { StyleSheet, View, type ViewProps } from "react-native";
 
 export type ContainerViewProps = ViewProps & {
-  lightColor?: string;
-  darkColor?: string;
+  color?: keyof ColorsKey["background"];
 };
 
 export default function ContainerView({
   style,
-  lightColor,
-  darkColor,
+  color,
   ...otherProps
 }: ContainerViewProps) {
-  return <View style={[styles.container, style]} {...otherProps} />;
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            (color && Colors.background[color]) || Colors.background.black,
+        },
+        style,
+      ]}
+      {...otherProps}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
@@ -20,7 +30,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 40,
-    backgroundColor: Colors.background,
   },
 });
