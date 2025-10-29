@@ -6,6 +6,9 @@ import { captureRef } from "react-native-view-shot";
 
 import { useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -33,7 +36,11 @@ export default function CameraScreen() {
 
   const { width, height } = useWindowDimensions();
   const [permission, requestPermission] = useCameraPermissions();
+
   const [facing, setFacing] = useState<CameraType>("front");
+  const [photoCount, setPhotoCount] = useState<number>(
+    Math.ceil(Number(selectedFrameCount) / 2)
+  );
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showTakePictureImage, setShowTakePictureImage] =
     useState<boolean>(false);
@@ -41,6 +48,7 @@ export default function CameraScreen() {
   const [mergedUri, setMergedUri] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const previewRef = useRef<View>(null);
+  const cameraOpacity = useRef(new Animated.Value(0)).current;
 
   const startCountdown = () => {
     let count = 3;
@@ -76,28 +84,32 @@ export default function CameraScreen() {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
       setPhotoUri(photo.uri);
-      console.log("Captured photo:", photo.uri);
     }
   };
 
   const renderTakePictureOverlay = () => {};
 
-  // Start take picture countdown on mount
+  // Fade in camera when permission is granted
   useEffect(() => {
-    console.log("starting countdown");
-    const id = setTimeout(startCountdown, 3000);
-    return () => {
-      clearTimeout(id);
-      console.log("unmounted!");
-    };
-  }, []);
+    if (permission && permission.granted) {
+      Animated.timing(cameraOpacity, {
+        toValue: 1,
+        duration: 3000,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: Platform.OS !== "web",
+      }).start(() => {
+        console.log("Camera faded in, starting countdown");
+        startCountdown();
+      });
+    }
+  }, [permission, cameraOpacity]);
 
   useEffect(() => {
     if (showTakePictureImage) {
       const id = setTimeout(() => {
         takePhoto();
         setShowTakePictureImage(false);
-      }, 5000);
+      }, 2000);
       return () => clearTimeout(id);
     }
   }, [showTakePictureImage]);
@@ -137,24 +149,38 @@ export default function CameraScreen() {
           {
             paddingHorizontal: Math.min(40, width * 0.06),
             paddingVertical: Math.min(48, height * 0.06),
+            justifyContent: "space-evenly",
           },
         ]}
       >
         {!photoUri ? (
           <>
-            <ThemedText type="title" color="black" style={{ marginBottom: 40 }}>
+            <ThemedText type="title" color="black">
               Get Ready To Pose!
             </ThemedText>
-            <CameraView
-              ref={cameraRef}
-              style={[
-                styles.camera,
-                { aspectRatio: 9 / 16, maxHeight: height * 0.68 },
-              ]}
-              facing={facing}
-              autofocus="on"
-              mirror={true}
-            />
+            <ThemedText type="subtitle" color="black">
+              {photoCount} photo{photoCount <= 1 ? "" : "s"} to snap!
+            </ThemedText>
+            <Animated.View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+                height: "100%",
+                opacity: cameraOpacity,
+              }}
+            >
+              <CameraView
+                ref={cameraRef}
+                style={[
+                  styles.camera,
+                  { aspectRatio: 2 / 3, maxHeight: height * 0.7 },
+                ]}
+                facing={facing}
+                autofocus="on"
+                mirror={true}
+              />
+            </Animated.View>
             {countdown && (
               <View style={styles.countdownOverlay}>
                 <Text style={styles.countdownText}>{countdown}</Text>
@@ -210,7 +236,7 @@ export default function CameraScreen() {
                 styles.previewContainer,
                 {
                   aspectRatio: 2 / 3,
-                  maxHeight: height * 0.68,
+                  maxHeight: height * 0.7,
                   // width: width * 0.8,
                 },
               ]}
@@ -222,9 +248,6 @@ export default function CameraScreen() {
                 contentFit="contain"
               />
             </View>
-            {/* <TouchableOpacity style={styles.captureButton} onPress={saveMerged}>
-              <Text style={styles.buttonText}>Save with Frame</Text>
-            </TouchableOpacity> */}
           </>
         )}
       </ContainerView>
