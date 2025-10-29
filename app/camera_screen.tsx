@@ -1,8 +1,7 @@
 import { PHOTO_CAMERA_IMAGES, PHOTO_FRAME_IMAGES } from "@/constants/assets";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router"; // get frame index from previous screen
-import { captureRef } from "react-native-view-shot";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -18,40 +17,52 @@ import {
 
 import { ContainerView, ScreenView } from "@/components/view";
 import { Colors } from "@/constants/theme";
-import type { PhotoFrameColor, PhotoFrameCount } from "@/types/photo_frame";
+import type {
+  PhotoFrameColor,
+  PhotoFrameCount,
+  PhotoFrameSettings,
+  PhotoSnappedSet,
+} from "@/types/photo_frame";
 
 import ThemedText from "@/components/ThemedText";
-import type { Asset } from "expo-asset";
 
 export default function CameraScreen() {
+  const router = useRouter();
   const { selectedFrameCount, selectedTemplateColor } = useLocalSearchParams<{
     selectedFrameCount: string;
     selectedTemplateColor: string;
   }>();
-  const [selectedFrameImage] = useState<Asset>(
-    PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount][
-      selectedTemplateColor as PhotoFrameColor
-    ]
-  );
-
   const { width, height } = useWindowDimensions();
   const [permission, requestPermission] = useCameraPermissions();
 
+  const [selectedFrameSettings] = useState<PhotoFrameSettings>({
+    frameOverlay:
+      PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount][
+        selectedTemplateColor as PhotoFrameColor
+      ],
+    selectedFrameCount: Number(selectedFrameCount),
+    selectedTemplateColor: selectedTemplateColor as PhotoFrameColor,
+    totalFramePhotos: 1,
+    // scrapping multi photo shoot for now - Math.ceil(Number(selectedFrameCount) / 2)
+  });
   const [facing, setFacing] = useState<CameraType>("front");
-  const [photoCount, setPhotoCount] = useState<number>(
-    Math.ceil(Number(selectedFrameCount) / 2)
-  );
+  const [currentPhotoCount, setCurrentPhotoCount] = useState<number>(1);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showTakePictureImage, setShowTakePictureImage] =
     useState<boolean>(false);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [mergedUri, setMergedUri] = useState<string | null>(null);
+  const [photoShootFinished, setPhotoShootFinished] = useState<boolean>(false);
+  const [photoShootReady, setPhotoShootReady] = useState<boolean>(false);
+  const [photoUriSet, setPhotoUriSet] = useState<PhotoSnappedSet>(
+    {} as PhotoSnappedSet
+  );
+
   const cameraRef = useRef<CameraView>(null);
   const previewRef = useRef<View>(null);
   const cameraOpacity = useRef(new Animated.Value(0)).current;
+  const previewOpacity = useRef(new Animated.Value(0)).current;
 
   const startCountdown = () => {
-    let count = 3;
+    let count = 5;
     setCountdown(count);
 
     const countdownId = setInterval(() => {
@@ -66,28 +77,7 @@ export default function CameraScreen() {
     }, 1000);
   };
 
-  const saveMerged = async () => {
-    if (!previewRef.current) return;
-    try {
-      const uri = await captureRef(previewRef.current, {
-        format: "png",
-        quality: 1,
-      });
-      console.log("✅ Merged image saved:", uri);
-      setMergedUri(uri);
-    } catch (err) {
-      console.error("❌ Capture error:", err);
-    }
-  };
-
-  const takePhoto = async () => {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
-      setPhotoUri(photo.uri);
-    }
-  };
-
-  const renderTakePictureOverlay = () => {};
+  const goToPhotoFinish = () => {};
 
   // Fade in camera when permission is granted
   useEffect(() => {
@@ -99,23 +89,88 @@ export default function CameraScreen() {
         useNativeDriver: Platform.OS !== "web",
       }).start(() => {
         console.log("Camera faded in, starting countdown");
-        startCountdown();
+        setPhotoShootReady(true);
       });
     }
   }, [permission, cameraOpacity]);
 
+  // display captured photo with frame overlay
   useEffect(() => {
+    if (photoShootFinished) {
+      Animated.sequence([
+        Animated.delay(300), // wait 1 second (1000ms)
+        Animated.timing(previewOpacity, {
+          toValue: 1,
+          duration: 5000,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: Platform.OS !== "web",
+        }),
+        Animated.delay(2000),
+      ]).start(() => {
+        // maybe add an option to retake photos
+        router.push({
+          pathname: "/photoshoot_finish",
+          params: {
+            photoFrameSettings: JSON.stringify(selectedFrameSettings),
+            // photoUriSet: JSON.stringify(photoUriSet),
+            photoUri: photoUriSet[1], // for now, only single photo
+          },
+        });
+      });
+    }
+  }, [
+    photoShootFinished,
+    previewOpacity,
+    router,
+    selectedFrameSettings,
+    photoUriSet,
+  ]);
+
+  // will only run after countdown reaches 0
+  useEffect(() => {
+    const takePhoto = async () => {
+      if (cameraRef.current) {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 1,
+        });
+        setPhotoUriSet((prev) => {
+          return {
+            ...prev,
+            [currentPhotoCount]: photo.uri,
+          };
+        });
+      }
+    };
     if (showTakePictureImage) {
       const id = setTimeout(() => {
         takePhoto();
         setShowTakePictureImage(false);
+        setCurrentPhotoCount(currentPhotoCount + 1);
       }, 2000);
       return () => clearTimeout(id);
     }
-  }, [showTakePictureImage]);
+  }, [currentPhotoCount, showTakePictureImage]);
+
+  // thinking we need this to run the photo loop
+  useEffect(() => {
+    if (photoShootReady) {
+      if (
+        !photoShootFinished &&
+        currentPhotoCount <= selectedFrameSettings.totalFramePhotos
+      ) {
+        startCountdown();
+      } else if (currentPhotoCount >= selectedFrameSettings.totalFramePhotos) {
+        setPhotoShootFinished(true);
+      }
+    }
+  }, [
+    currentPhotoCount,
+    selectedFrameSettings,
+    photoShootFinished,
+    photoShootReady,
+  ]);
 
   if (!permission) {
-    // Permissions are still loading
     return (
       <View style={styles.centered}>
         <Text>Requesting camera permissions...</Text>
@@ -124,7 +179,6 @@ export default function CameraScreen() {
   }
 
   if (!permission.granted) {
-    // Permission denied
     return (
       <View style={styles.centered}>
         <Text style={{ textAlign: "center", marginBottom: 10 }}>
@@ -144,22 +198,21 @@ export default function CameraScreen() {
     <ScreenView>
       <ContainerView
         color="pink"
-        style={[
-          styles.cameraContainer,
-          {
-            paddingHorizontal: Math.min(40, width * 0.06),
-            paddingVertical: Math.min(48, height * 0.06),
-            justifyContent: "space-evenly",
-          },
-        ]}
+        style={{
+          paddingHorizontal: Math.min(40, width * 0.06),
+          paddingVertical: Math.min(48, height * 0.06),
+          justifyContent: "space-evenly",
+        }}
       >
-        {!photoUri ? (
+        {!photoShootFinished ? (
           <>
-            <ThemedText type="title" color="black">
+            <ThemedText type="title" color="black" style={{}}>
               Get Ready To Pose!
             </ThemedText>
             <ThemedText type="subtitle" color="black">
-              {photoCount} photo{photoCount <= 1 ? "" : "s"} to snap!
+              {selectedFrameSettings.totalFramePhotos - currentPhotoCount + 1}{" "}
+              photo
+              {currentPhotoCount <= 1 ? "" : "s"} to snap
             </ThemedText>
             <Animated.View
               style={{
@@ -174,7 +227,7 @@ export default function CameraScreen() {
                 ref={cameraRef}
                 style={[
                   styles.camera,
-                  { aspectRatio: 2 / 3, maxHeight: height * 0.7 },
+                  { aspectRatio: 2 / 3, maxHeight: height * 0.72 },
                 ]}
                 facing={facing}
                 autofocus="on"
@@ -214,22 +267,12 @@ export default function CameraScreen() {
               </View>
             )}
           </>
-        ) : mergedUri ? (
-          <>
-            <Image source={{ uri: mergedUri }} style={styles.capturedImage} />
-            <TouchableOpacity
-              style={styles.retakeButton}
-              onPress={() => {
-                setPhotoUri(null);
-                setMergedUri(null);
-              }}
-            >
-              <Text style={styles.buttonText}>Retake</Text>
-            </TouchableOpacity>
-          </>
         ) : (
           <>
-            <View
+            <ThemedText type="title" color="black">
+              🎃🎃🎃
+            </ThemedText>
+            <Animated.View
               ref={previewRef}
               collapsable={false}
               style={[
@@ -237,17 +280,20 @@ export default function CameraScreen() {
                 {
                   aspectRatio: 2 / 3,
                   maxHeight: height * 0.7,
-                  // width: width * 0.8,
+                  opacity: previewOpacity,
                 },
               ]}
             >
-              <Image source={{ uri: photoUri }} style={styles.capturedImage} />
               <Image
-                source={selectedFrameImage}
+                source={{ uri: photoUriSet[currentPhotoCount - 1] }}
+                style={styles.capturedImage}
+              />
+              <Image
+                source={selectedFrameSettings.frameOverlay}
                 style={styles.frameOverlay}
                 contentFit="contain"
               />
-            </View>
+            </Animated.View>
           </>
         )}
       </ContainerView>
@@ -256,12 +302,10 @@ export default function CameraScreen() {
 }
 
 const styles = StyleSheet.create({
-  cameraContainer: {},
   header: {
     backgroundColor: Colors.background.pink,
   },
   camera: {
-    // position: "absolute",
     width: "100%",
     height: "100%",
   },
@@ -311,8 +355,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   previewContainer: {
-    // flex: 1,
-    // width: WIDTH * 0.8,
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
