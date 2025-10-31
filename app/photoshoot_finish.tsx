@@ -1,7 +1,8 @@
 import { Image } from "expo-image";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
-// import { shareAsync } from "expo-sharing";
+import { shareAsync } from "expo-sharing";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
@@ -66,6 +67,28 @@ export default function PhotoshootFinish() {
     }
   }, [printSettings.isPrinting]);
 
+
+
+async function createPrintableImage(photoUri: string, overlayUri:string) {
+  // Step 1: get the base image dimensions
+  const targetWidth = 1800;  // 6in * 300dpi
+  const targetHeight = 1200; // 4in * 300dpi (landscape)
+
+  // Step 2: start with a solid black base (blank PNG)
+  // expo-image-manipulator doesn’t support “fill color,”
+  // so we just start with a transparent base and overlay black via a rect.
+
+  // Step 3: resize your photo proportionally to fit
+  const resizedPhoto = await ImageManipulator.manipulateAsync(
+    photoUri,
+    [{ resize: { width: targetWidth, height: targetHeight } }],
+    { compress: 1, format: ImageManipulator.SaveFormat.PNG }
+  );
+
+  return resizedPhoto.uri;
+}
+
+
   const savePhoto = async (): Promise<string> => {
     let photoUri = "";
 
@@ -74,6 +97,9 @@ export default function PhotoshootFinish() {
         photoUri = await captureRef(previewRef.current, {
           format: "png",
           quality: 1,
+          width: 1200,
+          height: 1800,
+          
         });
         console.log("✅ Merged image saved:", photoUri);
       } catch (err) {
@@ -85,46 +111,91 @@ export default function PhotoshootFinish() {
 
   const printPhoto = async (photoUri: string, printer: Print.Printer) => {
     // const oldhtml = `<html><body><img src="${photoUri}" style="width:100%;height:auto;"/></body></html>`
+// const html = `
+// <!doctype html>
+// <html>
+//   <head>
+//     <meta charset="utf-8">
+//     <style>
+//       @page {
+//         size: 4in 6in;
+//         margin: 0;
+//         padding: 0;
+//       }
+
+//       html, body {
+//         margin: 0;
+//         padding: 0;
+//         width: 100%;
+//         height: 100%;
+//         overflow: hidden;
+//         background-color: black;
+//       }
+
+//       img {
+//         position: absolute;
+//         top: 0;
+//         left: 0;
+//         width: 100%;
+//         height: 100%;
+//         object-fit: contain;
+//         object-position: center center;
+//       }
+//     </style>
+//   </head>
+//   <body>
+//     <img src="${photoUri}" />
+//   </body>
+// </html>
+// `;
+
     const html = `
-    <html>
-      <head>
+      <html>
+        <head>
+        <meta charset="utf-8">
         <style>
+          @page {
+            size: 4in 6in;
+            margin: 0;
+            padding: 0;
+          }
+
           html, body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
           }
-          .page {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-          }
+
           img {
             width: 100%;
-            height: 100%;
+            height: auto;
           }
         </style>
-      </head>
-      <body>
-        <div class="page">
+        </head>
+        <body>
           <img src="${photoUri}" />
-        </div>
-      </body>
-    </html>
-  `;
+        </body>
+      </html>
+    `;
+
 
     // On iOS/android prints the given html. On web prints the HTML from the current page.
     console.log("printing...");
     await Print.printAsync({
       html,
+      width: 1200,
+      height: 1800,
+      margins: {
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      },
       printerUrl: printer.url, // iOS only
     });
     // const { uri } = await Print.printToFileAsync({
     //   html,
+    //   width: 1200,
+    //   height: 1800,
     //   margins: {
     //     top: 0,
     //     left: 0,
@@ -159,7 +230,7 @@ export default function PhotoshootFinish() {
           style={[
             styles.previewContainer,
             {
-              aspectRatio: 2 / 3,
+              aspectRatio: 2/3,
               maxHeight: height * 0.7,
             },
           ]}
