@@ -93,7 +93,7 @@ export default function SelectTemplate() {
     <ScreenView>
       <ContainerView color="pink">
         <ThemedText color="black" type="title">
-          Select A Template!
+          Select A Frame!
         </ThemedText>
         <ContainerView color="pink" style={styles.frameContainer}>
           <TouchableOpacity style={styles.arrowButton} onPress={handlePrev}>

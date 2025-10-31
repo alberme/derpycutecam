@@ -105,17 +105,19 @@ export default function CameraScreen() {
           easing: Easing.out(Easing.cubic),
           useNativeDriver: Platform.OS !== "web",
         }),
-        Animated.delay(2000),
-      ]).start(() => {
-        // maybe add an option to retake photos
-        router.push({
-          pathname: "/photoshoot_finish",
-          params: {
-            photoFrameSettings: JSON.stringify(selectedFrameSettings),
-            // photoUriSet: JSON.stringify(photoUriSet),
-            photoUri: photoUriSet[1], // for now, only single photo
-          },
-        });
+        Animated.delay(1000),
+      ]).start(({ finished }) => {
+        if (finished) {
+          // maybe add an option to retake photos
+          router.push({
+            pathname: "/photoshoot_finish",
+            params: {
+              selectedFrameSettings: JSON.stringify(selectedFrameSettings),
+              // photoUriSet: JSON.stringify(photoUriSet),
+              photoUri: photoUriSet[1], // for now, only single photo
+            },
+          });
+        }
       });
     }
   }, [

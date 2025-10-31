@@ -3,13 +3,37 @@ import { ContainerView, ScreenView } from "@/components/view";
 import { Colors } from "@/constants/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
+
+import { Directory, Paths } from "expo-file-system";
+import { useEffect } from "react";
+
+async function clearCacheDirectory() {
+  const cacheDir = new Directory(Paths.cache);
+
+  try {
+    const entries = await cacheDir.list(); // list all files/folders
+
+    for (const entry of entries) {
+      // Each entry is a File or Directory object
+      await entry.delete();
+    }
+
+    console.log(`✅ Cleared ${entries.length} entries from cache.`);
+  } catch (err) {
+    console.error("Error clearing cache directory:", err);
+  }
+}
 
 export default function Index() {
   const router = useRouter();
+  const { width: windowWidth } = useWindowDimensions();
   const blurhash =
     "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
 
+  useEffect(() => {
+    clearCacheDirectory();
+  }, []);
   return (
     <ScreenView>
       <ContainerView>
@@ -19,13 +43,19 @@ export default function Index() {
             source={require("@/assets/images/logo.png")}
             // placeholder={{ blurhash }}
             contentFit="scale-down"
-            style={styles.image}
+            style={[styles.image, { height: windowWidth <= 375 ? 200 : 450 }]}
             transition={1000}
           />
           <ThemedButton
-            title="hoiiiiiiiiii"
+            title="Start!"
             variant="secondary"
-            onPress={() => router.push("/select_frame")}
+            // onPress={() => router.push("/select_frame")} - for now go directly to template select
+            onPress={() =>
+              router.push({
+                pathname: "/select_template",
+                params: { selectedFrameCount: 1 },
+              })
+            }
           />
         </ContainerView>
       </ContainerView>
@@ -45,10 +75,10 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   image: {
-    width: "100%",
     height: "100%",
-    minWidth: 400,
-    maxHeight: 400,
+    aspectRatio: 1,
+    // maxWidth: ,
+    // maxHeight: 200,
   },
   button: {
     backgroundColor: "#FFFFFF",
