@@ -84,8 +84,8 @@ export default function ThemedButton({
 
 const styles = StyleSheet.create({
   base: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 36,
     borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
@@ -101,8 +101,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   textBase: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 24,
+    fontWeight: "700",
     color: "#1E1E1E",
   },
 
