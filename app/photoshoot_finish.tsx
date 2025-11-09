@@ -67,27 +67,24 @@ export default function PhotoshootFinish() {
     }
   }, [printSettings.isPrinting]);
 
+  async function createPrintableImage(photoUri: string, overlayUri: string) {
+    // Step 1: get the base image dimensions
+    const targetWidth = 1800; // 6in * 300dpi
+    const targetHeight = 1200; // 4in * 300dpi (landscape)
 
+    // Step 2: start with a solid black base (blank PNG)
+    // expo-image-manipulator doesn’t support “fill color,”
+    // so we just start with a transparent base and overlay black via a rect.
 
-async function createPrintableImage(photoUri: string, overlayUri:string) {
-  // Step 1: get the base image dimensions
-  const targetWidth = 1800;  // 6in * 300dpi
-  const targetHeight = 1200; // 4in * 300dpi (landscape)
+    // Step 3: resize your photo proportionally to fit
+    const resizedPhoto = await ImageManipulator.manipulateAsync(
+      photoUri,
+      [{ resize: { width: targetWidth, height: targetHeight } }],
+      { compress: 1, format: ImageManipulator.SaveFormat.PNG }
+    );
 
-  // Step 2: start with a solid black base (blank PNG)
-  // expo-image-manipulator doesn’t support “fill color,”
-  // so we just start with a transparent base and overlay black via a rect.
-
-  // Step 3: resize your photo proportionally to fit
-  const resizedPhoto = await ImageManipulator.manipulateAsync(
-    photoUri,
-    [{ resize: { width: targetWidth, height: targetHeight } }],
-    { compress: 1, format: ImageManipulator.SaveFormat.PNG }
-  );
-
-  return resizedPhoto.uri;
-}
-
+    return resizedPhoto.uri;
+  }
 
   const savePhoto = async (): Promise<string> => {
     let photoUri = "";
@@ -99,7 +96,6 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
           quality: 1,
           width: 1200,
           height: 1800,
-          
         });
         console.log("✅ Merged image saved:", photoUri);
       } catch (err) {
@@ -111,65 +107,81 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
 
   const printPhoto = async (photoUri: string, printer: Print.Printer) => {
     // const oldhtml = `<html><body><img src="${photoUri}" style="width:100%;height:auto;"/></body></html>`
-// const html = `
-// <!doctype html>
-// <html>
-//   <head>
-//     <meta charset="utf-8">
-//     <style>
-//       @page {
-//         size: 4in 6in;
-//         margin: 0;
-//         padding: 0;
-//       }
+    // const html = `
+    // <!doctype html>
+    // <html>
+    //   <head>
+    //     <meta charset="utf-8">
+    //     <style>
+    //       @page {
+    //         size: 4in 6in;
+    //         margin: 0;
+    //         padding: 0;
+    //       }
 
-//       html, body {
-//         margin: 0;
-//         padding: 0;
-//         width: 100%;
-//         height: 100%;
-//         overflow: hidden;
-//         background-color: black;
-//       }
+    //       html, body {
+    //         margin: 0;
+    //         padding: 0;
+    //         width: 100%;
+    //         height: 100%;
+    //         overflow: hidden;
+    //         background-color: black;
+    //       }
 
-//       img {
-//         position: absolute;
-//         top: 0;
-//         left: 0;
-//         width: 100%;
-//         height: 100%;
-//         object-fit: contain;
-//         object-position: center center;
-//       }
-//     </style>
-//   </head>
-//   <body>
-//     <img src="${photoUri}" />
-//   </body>
-// </html>
-// `;
+    //       img {
+    //         position: absolute;
+    //         top: 0;
+    //         left: 0;
+    //         width: 100%;
+    //         height: 100%;
+    //         object-fit: contain;
+    //         object-position: center center;
+    //       }
+    //     </style>
+    //   </head>
+    //   <body>
+    //     <img src="${photoUri}" />
+    //   </body>
+    // </html>
+    // `;
+
+    // lets try saving the photo locally and testing this out in browser
+    // Use a small bleed so printed output can be edge-to-edge on printers
+    // Note: some printers still force hardware margins; bleed reduces visible white lines
+    const BLEED_PX = 8; // pixels to extend beyond page (adjust as needed)
 
     const html = `
+      <!doctype html>
       <html>
         <head>
-        <meta charset="utf-8">
-        <style>
-          @page {
-            size: 4in 6in;
-            margin: 0;
-            padding: 0;
-          }
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <style>
+            /* Request no margins on the generated PDF */
+            @page { size: 4in 6in; margin: 0; }
 
-          html, body {
-            margin: 0;
-            padding: 0;
-          }
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+              padding: 0;
+              background: transparent;
+            }
 
-          img {
-            width: 100%;
-            height: auto;
-          }
-        </style>
+            /* Make the image fill the page exactly and remove any gaps */
+            img {
+              display: block;
+              /* extend the image slightly beyond the page to create a bleed */
+              width: calc(100% + ${BLEED_PX}px);
+              height: calc(100% + ${BLEED_PX}px);
+              margin: -${Math.floor(BLEED_PX / 2)}px 0 0 -${Math.floor(
+      BLEED_PX / 2
+    )}px;
+              object-fit: cover; /* cover avoids white gaps */
+              padding: 0;
+              -webkit-print-color-adjust: exact;
+            }
+          </style>
         </head>
         <body>
           <img src="${photoUri}" />
@@ -177,10 +189,21 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
       </html>
     `;
 
-
     // On iOS/android prints the given html. On web prints the HTML from the current page.
     console.log("printing...");
-    await Print.printAsync({
+    // await Print.printAsync({
+    //   html,
+    //   width: 1400,
+    //   height: 1800,
+    //   margins: {
+    //     top: 0,
+    //     left: 0,
+    //     right: 0,
+    //     bottom: 0,
+    //   },
+    //   printerUrl: printer.url, // iOS only
+    // });
+    const { uri } = await Print.printToFileAsync({
       html,
       width: 1200,
       height: 1800,
@@ -190,20 +213,8 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
         right: 0,
         bottom: 0,
       },
-      printerUrl: printer.url, // iOS only
     });
-    // const { uri } = await Print.printToFileAsync({
-    //   html,
-    //   width: 1200,
-    //   height: 1800,
-    //   margins: {
-    //     top: 0,
-    //     left: 0,
-    //     right: 0,
-    //     bottom: 0,
-    //   },
-    // });
-    // await shareAsync(uri, { UTI: ".pdf", mimeType: "application/pdf" });
+    await shareAsync(uri, { UTI: ".pdf", mimeType: "application/pdf" });
   };
 
   // const selectPrinter = async () => {
@@ -230,7 +241,7 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
           style={[
             styles.previewContainer,
             {
-              aspectRatio: 2/3,
+              aspectRatio: 2 / 3,
               maxHeight: height * 0.7,
             },
           ]}
