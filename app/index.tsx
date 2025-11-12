@@ -3,7 +3,7 @@ import { ContainerView, ScreenView } from "@/components/view";
 import { Colors } from "@/constants/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 
 import { Directory, Paths } from "expo-file-system";
 import { useEffect } from "react";
@@ -32,7 +32,9 @@ export default function Index() {
     "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
 
   useEffect(() => {
-    clearCacheDirectory();
+    if (Platform.OS !== "web") {
+      clearCacheDirectory();
+    }
   }, []);
   return (
     <ScreenView>
