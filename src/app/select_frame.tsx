@@ -1,14 +1,14 @@
-import Grid from "@/components/Grid";
-import Text from "@/components/ThemedText";
-import { ContainerView, ScreenView } from "@/components/view";
+import Grid from "@/src/components/Grid";
+import Text from "@/src/components/ThemedText";
+import { ContainerView, ScreenView } from "@/src/components/view";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
-import PhotoTemplateCard from "@/components/PhotoTemplateCard";
-import ThemedButton from "@/components/ThemedButton";
+import PhotoTemplateCard from "@/src/components/PhotoTemplateCard";
+import ThemedButton from "@/src/components/ThemedButton";
 
-import type { PhotoFrameCount } from "@/types/photo_frame";
+import type { PhotoFrameCount } from "@/src/types/photo_frame";
 const FRAME_COUNTS: PhotoFrameCount[] = [1, 3, 6];
 
 export default function Select() {
@@ -42,7 +42,7 @@ export default function Select() {
           variant="secondary"
           onPress={() =>
             router.push({
-              pathname: "/select_template",
+              pathname: "./select_template",
               params: { selectedFrameCount },
             })
           }

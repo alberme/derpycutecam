@@ -2,7 +2,7 @@ import type {
   PhotoFrameColor,
   PhotoFrameCount,
   PhotoTemplateByColor,
-} from "@/types/photo_frame";
+} from "@/src/types/photo_frame";
 import { Asset } from "expo-asset";
 
 export const PHOTO_FRAME_COUNTS: PhotoFrameCount[] = [1, 3, 6];
@@ -45,7 +45,7 @@ export const PHOTO_FRAME_IMAGES = Object.fromEntries(
       Object.entries(colorMap).map(([color, mod]) => [
         color,
         Asset.fromModule(mod),
-      ])
+      ]),
     ),
-  ])
+  ]),
 ) as Record<PhotoFrameCount, PhotoTemplateByColor>;

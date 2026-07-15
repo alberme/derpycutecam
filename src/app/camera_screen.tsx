@@ -1,4 +1,7 @@
-import { PHOTO_CAMERA_IMAGES, PHOTO_FRAME_IMAGES } from "@/constants/assets";
+import {
+  PHOTO_CAMERA_IMAGES,
+  PHOTO_FRAME_IMAGES,
+} from "@/src/constants/assets";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -15,16 +18,16 @@ import {
   useWindowDimensions,
 } from "react-native";
 
-import { ContainerView, ScreenView } from "@/components/view";
-import { Colors } from "@/constants/theme";
+import { ContainerView, ScreenView } from "@/src/components/view";
+import { Colors } from "@/src/constants/theme";
 import type {
   PhotoFrameColor,
   PhotoFrameCount,
   PhotoFrameSettings,
   PhotoSnappedSet,
-} from "@/types/photo_frame";
+} from "@/src/types/photo_frame";
 
-import ThemedText from "@/components/ThemedText";
+import ThemedText from "@/src/components/ThemedText";
 
 export default function CameraScreen() {
   const router = useRouter();
@@ -53,7 +56,7 @@ export default function CameraScreen() {
   const [photoShootFinished, setPhotoShootFinished] = useState<boolean>(false);
   const [photoShootReady, setPhotoShootReady] = useState<boolean>(false);
   const [photoUriSet, setPhotoUriSet] = useState<PhotoSnappedSet>(
-    {} as PhotoSnappedSet
+    {} as PhotoSnappedSet,
   );
 
   const cameraRef = useRef<CameraView>(null);
@@ -110,7 +113,7 @@ export default function CameraScreen() {
         if (finished) {
           // maybe add an option to retake photos
           router.push({
-            pathname: "/photoshoot_finish",
+            pathname: "./photoshoot_finish",
             params: {
               selectedFrameSettings: JSON.stringify(selectedFrameSettings),
               // photoUriSet: JSON.stringify(photoUriSet),

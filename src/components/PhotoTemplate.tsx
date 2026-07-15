@@ -1,6 +1,6 @@
-import type { PhotoFrameCount } from "@/types/photo_frame";
+import type { PhotoFrameCount } from "@/src/types/photo_frame";
 import * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Image,
@@ -45,7 +45,7 @@ export default function PhotoTemplate({
       if (status !== "granted") {
         Alert.alert(
           "Permission required",
-          "Camera access is needed to take photos."
+          "Camera access is needed to take photos.",
         );
         return;
       }

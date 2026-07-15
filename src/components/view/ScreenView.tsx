@@ -1,5 +1,5 @@
-import { Colors, type ColorsKey } from "@/constants/theme";
-import React, { ReactNode } from "react";
+import { Colors, type ColorsKey } from "@/src/constants/theme";
+import { ReactNode } from "react";
 import { ScrollView, StyleSheet, View, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

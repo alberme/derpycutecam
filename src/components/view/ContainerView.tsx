@@ -1,4 +1,4 @@
-import { Colors, type ColorsKey } from "@/constants/theme";
+import { Colors, type ColorsKey } from "@/src/constants/theme";
 import { StyleSheet, View, type ViewProps } from "react-native";
 
 export type ContainerViewProps = ViewProps & {

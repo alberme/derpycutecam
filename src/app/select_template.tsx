@@ -1,6 +1,6 @@
-import ThemedButton from "@/components/ThemedButton";
-import ThemedText from "@/components/ThemedText";
-import { ContainerView, ScreenView } from "@/components/view";
+import ThemedButton from "@/src/components/ThemedButton";
+import ThemedText from "@/src/components/ThemedText";
+import { ContainerView, ScreenView } from "@/src/components/view";
 
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,12 +13,12 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import { PHOTO_FRAME_IMAGES } from "@/constants/assets";
+import { PHOTO_FRAME_IMAGES } from "@/src/constants/assets";
 import type {
   PhotoFrameColor,
   PhotoFrameCount,
   PhotoTemplateByColor,
-} from "@/types/photo_frame";
+} from "@/src/types/photo_frame";
 type slideDirectionType = "left" | "right";
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
@@ -28,7 +28,7 @@ export default function SelectTemplate() {
     selectedFrameCount: string;
   }>();
   const [selectedPhotoTemplates] = useState<PhotoTemplateByColor>(
-    PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount]
+    PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount],
   );
   const [currentTemplateViewColor, setCurrentTemplateViewColor] =
     useState<PhotoFrameColor>("black");
@@ -54,7 +54,7 @@ export default function SelectTemplate() {
           }).start();
         }
       },
-    })
+    }),
   ).current;
   const slideTo = (direction: slideDirectionType) => {
     const toValue = direction === "left" ? -WINDOW_WIDTH : WINDOW_WIDTH;
@@ -124,7 +124,7 @@ export default function SelectTemplate() {
           variant="secondary"
           onPress={() =>
             router.push({
-              pathname: "/camera_screen",
+              pathname: "./camera_screen",
               params: {
                 selectedFrameCount,
                 selectedTemplateColor: currentTemplateViewColor,

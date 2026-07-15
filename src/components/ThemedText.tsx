@@ -1,4 +1,4 @@
-import { Colors, Fonts, type ColorsKey } from "@/constants/theme";
+import { Colors, Fonts, type ColorsKey } from "@/src/constants/theme";
 import { StyleSheet, Text, type TextProps } from "react-native";
 
 export type ThemedTextProps = TextProps & {

@@ -1,5 +1,5 @@
-import { Colors } from "@/constants/theme";
-import type { PhotoFrameCount } from "@/types/photo_frame";
+import { Colors } from "@/src/constants/theme";
+import type { PhotoFrameCount } from "@/src/types/photo_frame";
 import { StyleSheet, View } from "react-native";
 
 interface PhotoFrameProps {

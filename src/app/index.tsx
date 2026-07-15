@@ -1,6 +1,6 @@
-import ThemedButton from "@/components/ThemedButton";
-import { ContainerView, ScreenView } from "@/components/view";
-import { Colors } from "@/constants/theme";
+import ThemedButton from "@/src/components/ThemedButton";
+import { ContainerView, ScreenView } from "@/src/components/view";
+import { Colors } from "@/src/constants/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
@@ -34,6 +34,7 @@ export default function Index() {
   useEffect(() => {
     clearCacheDirectory();
   }, []);
+  ``;
   return (
     <ScreenView>
       <ContainerView>
@@ -52,7 +53,7 @@ export default function Index() {
             // onPress={() => router.push("/select_frame")} - for now go directly to template select
             onPress={() =>
               router.push({
-                pathname: "/select_template",
+                pathname: "./select_template",
                 params: { selectedFrameCount: 1 },
               })
             }

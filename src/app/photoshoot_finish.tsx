@@ -2,17 +2,16 @@ import { Image } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { shareAsync } from "expo-sharing";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 // import { PHOTO_CAMERA_IMAGES, PHOTO_FRAME_IMAGES } from "@/constants/assets";
 
-import ThemedButton from "@/components/ThemedButton";
-import ThemedText from "@/components/ThemedText";
-import { ContainerView, ScreenView } from "@/components/view";
-import { Colors } from "@/constants/theme";
-import type { PhotoFrameSettings } from "@/types/photo_frame";
+import ThemedButton from "@/src/components/ThemedButton";
+import ThemedText from "@/src/components/ThemedText";
+import { ContainerView, ScreenView } from "@/src/components/view";
+import { Colors } from "@/src/constants/theme";
+import type { PhotoFrameSettings } from "@/src/types/photo_frame";
 
 type PhotoPrintSettings = {
   isPrinting: boolean;
@@ -30,7 +29,7 @@ export default function PhotoshootFinish() {
   const router = useRouter();
 
   const [photoFrameSettings] = useState<PhotoFrameSettings>(
-    JSON.parse(selectedFrameSettings)
+    JSON.parse(selectedFrameSettings),
   );
   const [printSettings, setPrintSettings] = useState<PhotoPrintSettings>({
     isPrinting: false,
@@ -67,27 +66,24 @@ export default function PhotoshootFinish() {
     }
   }, [printSettings.isPrinting]);
 
+  async function createPrintableImage(photoUri: string, overlayUri: string) {
+    // Step 1: get the base image dimensions
+    const targetWidth = 1800; // 6in * 300dpi
+    const targetHeight = 1200; // 4in * 300dpi (landscape)
 
+    // Step 2: start with a solid black base (blank PNG)
+    // expo-image-manipulator doesn’t support “fill color,”
+    // so we just start with a transparent base and overlay black via a rect.
 
-async function createPrintableImage(photoUri: string, overlayUri:string) {
-  // Step 1: get the base image dimensions
-  const targetWidth = 1800;  // 6in * 300dpi
-  const targetHeight = 1200; // 4in * 300dpi (landscape)
+    // Step 3: resize your photo proportionally to fit
+    const resizedPhoto = await ImageManipulator.manipulateAsync(
+      photoUri,
+      [{ resize: { width: targetWidth, height: targetHeight } }],
+      { compress: 1, format: ImageManipulator.SaveFormat.PNG },
+    );
 
-  // Step 2: start with a solid black base (blank PNG)
-  // expo-image-manipulator doesn’t support “fill color,”
-  // so we just start with a transparent base and overlay black via a rect.
-
-  // Step 3: resize your photo proportionally to fit
-  const resizedPhoto = await ImageManipulator.manipulateAsync(
-    photoUri,
-    [{ resize: { width: targetWidth, height: targetHeight } }],
-    { compress: 1, format: ImageManipulator.SaveFormat.PNG }
-  );
-
-  return resizedPhoto.uri;
-}
-
+    return resizedPhoto.uri;
+  }
 
   const savePhoto = async (): Promise<string> => {
     let photoUri = "";
@@ -99,7 +95,6 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
           quality: 1,
           width: 1200,
           height: 1800,
-          
         });
         console.log("✅ Merged image saved:", photoUri);
       } catch (err) {
@@ -111,43 +106,43 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
 
   const printPhoto = async (photoUri: string, printer: Print.Printer) => {
     // const oldhtml = `<html><body><img src="${photoUri}" style="width:100%;height:auto;"/></body></html>`
-// const html = `
-// <!doctype html>
-// <html>
-//   <head>
-//     <meta charset="utf-8">
-//     <style>
-//       @page {
-//         size: 4in 6in;
-//         margin: 0;
-//         padding: 0;
-//       }
+    // const html = `
+    // <!doctype html>
+    // <html>
+    //   <head>
+    //     <meta charset="utf-8">
+    //     <style>
+    //       @page {
+    //         size: 4in 6in;
+    //         margin: 0;
+    //         padding: 0;
+    //       }
 
-//       html, body {
-//         margin: 0;
-//         padding: 0;
-//         width: 100%;
-//         height: 100%;
-//         overflow: hidden;
-//         background-color: black;
-//       }
+    //       html, body {
+    //         margin: 0;
+    //         padding: 0;
+    //         width: 100%;
+    //         height: 100%;
+    //         overflow: hidden;
+    //         background-color: black;
+    //       }
 
-//       img {
-//         position: absolute;
-//         top: 0;
-//         left: 0;
-//         width: 100%;
-//         height: 100%;
-//         object-fit: contain;
-//         object-position: center center;
-//       }
-//     </style>
-//   </head>
-//   <body>
-//     <img src="${photoUri}" />
-//   </body>
-// </html>
-// `;
+    //       img {
+    //         position: absolute;
+    //         top: 0;
+    //         left: 0;
+    //         width: 100%;
+    //         height: 100%;
+    //         object-fit: contain;
+    //         object-position: center center;
+    //       }
+    //     </style>
+    //   </head>
+    //   <body>
+    //     <img src="${photoUri}" />
+    //   </body>
+    // </html>
+    // `;
 
     const html = `
       <html>
@@ -176,7 +171,6 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
         </body>
       </html>
     `;
-
 
     // On iOS/android prints the given html. On web prints the HTML from the current page.
     console.log("printing...");
@@ -230,7 +224,7 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
           style={[
             styles.previewContainer,
             {
-              aspectRatio: 2/3,
+              aspectRatio: 2 / 3,
               maxHeight: height * 0.7,
             },
           ]}
@@ -257,7 +251,7 @@ async function createPrintableImage(photoUri: string, overlayUri:string) {
             // onPress={() => router.push("/select_frame")} - for now go directly to template select
             onPress={() =>
               router.push({
-                pathname: "/",
+                pathname: "./index",
               })
             }
             disabled={printSettings.isPrinting}
