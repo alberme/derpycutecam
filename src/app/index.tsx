@@ -50,10 +50,10 @@ export default function Index() {
           <ThemedButton
             title="Start!"
             variant="secondary"
-            // onPress={() => router.push("/select_frame")} - for now go directly to template select
+            // onPress={() => router.push("/select_frame")} - for now go directly to theme select
             onPress={() =>
               router.push({
-                pathname: "./select_template",
+                pathname: "./select_theme",
                 params: { selectedFrameCount: 1 },
               })
             }

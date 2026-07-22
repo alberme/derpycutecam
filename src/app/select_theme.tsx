@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import { PHOTO_FRAME_IMAGES } from "@/src/constants/assets";
+import { PHOTO_FRAME_CARDS } from "@/src/constants/assets";
 import type {
   PhotoFrameColor,
   PhotoFrameCount,
@@ -23,12 +23,12 @@ type slideDirectionType = "left" | "right";
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 
-export default function SelectTemplate() {
+export default function SelectTheme() {
   const { selectedFrameCount } = useLocalSearchParams<{
     selectedFrameCount: string;
   }>();
   const [selectedPhotoTemplates] = useState<PhotoTemplateByColor>(
-    PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount],
+    PHOTO_FRAME_CARDS[Number(selectedFrameCount) as PhotoFrameCount],
   );
   const [currentTemplateViewColor, setCurrentTemplateViewColor] =
     useState<PhotoFrameColor>("black");
@@ -59,7 +59,7 @@ export default function SelectTemplate() {
   const slideTo = (direction: slideDirectionType) => {
     const toValue = direction === "left" ? -WINDOW_WIDTH : WINDOW_WIDTH;
     const templatesByColor =
-      PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount];
+      PHOTO_FRAME_CARDS[Number(selectedFrameCount) as PhotoFrameCount];
     const templateColors = Object.keys(templatesByColor) as PhotoFrameColor[];
 
     Animated.timing(translateX, {
@@ -93,7 +93,7 @@ export default function SelectTemplate() {
     <ScreenView>
       <ContainerView color="pink">
         <ThemedText color="black" type="title">
-          Select A Frame!
+          select a theme!
         </ThemedText>
         <ContainerView color="pink" style={styles.frameContainer}>
           <TouchableOpacity style={styles.arrowButton} onPress={handlePrev}>

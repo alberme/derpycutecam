@@ -5,14 +5,10 @@ import type {
 } from "@/src/types/photo_frame";
 import { Asset } from "expo-asset";
 
-export const PHOTO_FRAME_COUNTS: PhotoFrameCount[] = [1, 3, 6];
-export const PHOTO_FRAME_COLORS: PhotoFrameColor[] = [
-  "black",
-  "purple",
-  "green",
-];
-
-const PHOTO_FRAME_MODULES = {
+/*
+== IMPORT ASSETS BELOW ==
+*/
+const PHOTO_FRAME_CARD_ASSETS = {
   1: {
     black: require("@/assets/images/templates/1/black_1.png"),
     purple: require("@/assets/images/templates/1/purple_1.png"),
@@ -29,17 +25,27 @@ const PHOTO_FRAME_MODULES = {
     green: require("@/assets/images/templates/6/green_6.png"),
   },
 };
-
-const PHOTO_CAMERA_MODULES = {
+const PHOTO_CAMERA_ASSETS = {
   take_picture: require("@/assets/images/camera/take_picture.gif"),
 };
 
+/*
+== END IMPORT ASSETS ==
+*/
+
+export const PHOTO_FRAME_CARD_COUNT_SLOTS: PhotoFrameCount[] = [1, 3, 6];
+export const PHOTO_FRAME_CARD_COLORS: PhotoFrameColor[] = [
+  "black",
+  "purple",
+  "green",
+];
+
 export const PHOTO_CAMERA_IMAGES: Record<string, Asset> = {
-  take_picture: Asset.fromModule(PHOTO_CAMERA_MODULES.take_picture),
+  take_picture: Asset.fromModule(PHOTO_CAMERA_ASSETS.take_picture),
 };
 
-export const PHOTO_FRAME_IMAGES = Object.fromEntries(
-  Object.entries(PHOTO_FRAME_MODULES).map(([count, colorMap]) => [
+export const PHOTO_FRAME_CARDS = Object.fromEntries(
+  Object.entries(PHOTO_FRAME_CARD_ASSETS).map(([count, colorMap]) => [
     Number(count),
     Object.fromEntries(
       Object.entries(colorMap).map(([color, mod]) => [

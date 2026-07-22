@@ -11,7 +11,7 @@ import ThemedButton from "@/src/components/ThemedButton";
 import type { PhotoFrameCount } from "@/src/types/photo_frame";
 const FRAME_COUNTS: PhotoFrameCount[] = [1, 3, 6];
 
-export default function Select() {
+export default function SelectFrame() {
   const router = useRouter();
   const [selectedFrameCount, setSelectedFrameCount] =
     useState<PhotoFrameCount>(1);
@@ -42,7 +42,7 @@ export default function Select() {
           variant="secondary"
           onPress={() =>
             router.push({
-              pathname: "./select_template",
+              pathname: "./select_theme",
               params: { selectedFrameCount },
             })
           }

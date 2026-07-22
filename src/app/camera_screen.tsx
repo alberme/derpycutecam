@@ -1,7 +1,4 @@
-import {
-  PHOTO_CAMERA_IMAGES,
-  PHOTO_FRAME_IMAGES,
-} from "@/src/constants/assets";
+import { PHOTO_CAMERA_IMAGES, PHOTO_FRAME_CARDS } from "@/src/constants/assets";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -40,7 +37,7 @@ export default function CameraScreen() {
 
   const [selectedFrameSettings] = useState<PhotoFrameSettings>({
     frameOverlay:
-      PHOTO_FRAME_IMAGES[Number(selectedFrameCount) as PhotoFrameCount][
+      PHOTO_FRAME_CARDS[Number(selectedFrameCount) as PhotoFrameCount][
         selectedTemplateColor as PhotoFrameColor
       ],
     selectedFrameCount: Number(selectedFrameCount),
