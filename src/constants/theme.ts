@@ -3,6 +3,7 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
+import { type GradientColors } from "@/src/types";
 import { Platform } from "react-native";
 
 const tintColorDark = "#fff";
@@ -12,6 +13,9 @@ export const Colors = {
     black: "#151718",
     pink: "#FFCEEE",
     transparent: "transparent",
+  },
+  gradient: {
+    blackpinkGradient: ["#FFCEF0", "#121212"] as GradientColors,
   },
   text: {
     white: "#ECEDEE",
@@ -43,6 +47,7 @@ export const Fonts = Platform.select({
   ios: {
     nixieOne: "NixieOne_400Regular",
     cedarvilleCursive: "CedarvilleCursive_400Regular",
+    fredoka: "Fredoka_700Bold",
     /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: "system-ui",
     /** iOS `UIFontDescriptorSystemDesignSerif` */
