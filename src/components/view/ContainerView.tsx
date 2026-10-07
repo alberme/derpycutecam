@@ -3,11 +3,13 @@ import { StyleSheet, View, type ViewProps } from "react-native";
 
 export type ContainerViewProps = ViewProps & {
   color?: keyof ColorsKey["background"];
+  noFlex?: boolean;
 };
 
 export default function ContainerView({
   style,
   color,
+  noFlex = false,
   ...otherProps
 }: ContainerViewProps) {
   return (
@@ -17,6 +19,7 @@ export default function ContainerView({
         {
           backgroundColor:
             (color && Colors.background[color]) || Colors.background.black,
+          flex: noFlex ? 0 : 1,
         },
         style,
       ]}

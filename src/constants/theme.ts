@@ -11,11 +11,13 @@ export const Colors = {
   background: {
     black: "#151718",
     pink: "#FFCEEE",
+    transparent: "transparent",
   },
   text: {
     white: "#ECEDEE",
     black: "#08060A",
     pink: "#FFCEEE",
+    darkPink: "#D498C2",
   },
   // text: "#ECEDEE",
   black: "#151718",
@@ -27,10 +29,20 @@ export const Colors = {
   // blackText: "#08060A",
 };
 
+export const FontStyles = {
+  bold: {
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
+  },
+};
+
 export type ColorsKey = typeof Colors;
 
 export const Fonts = Platform.select({
   ios: {
+    nixieOne: "NixieOne_400Regular",
+    cedarvilleCursive: "CedarvilleCursive_400Regular",
     /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: "system-ui",
     /** iOS `UIFontDescriptorSystemDesignSerif` */
@@ -41,12 +53,16 @@ export const Fonts = Platform.select({
     mono: "ui-monospace",
   },
   default: {
+    nixieOne: "NixieOne_400Regular",
+    cedarvilleCursive: "CedarvilleCursive_400Regular",
     sans: "normal",
     serif: "serif",
     rounded: "normal",
     mono: "monospace",
   },
   web: {
+    nixieOne: "NixieOne_400Regular",
+    cedarvilleCursive: "CedarvilleCursive_400Regular",
     sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
     rounded:

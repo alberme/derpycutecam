@@ -1,8 +1,15 @@
-import { Colors, Fonts, type ColorsKey } from "@/src/constants/theme";
+import {
+  Colors,
+  Fonts,
+  FontStyles,
+  type ColorsKey,
+} from "@/src/constants/theme";
 import { StyleSheet, Text, type TextProps } from "react-native";
 
 export type ThemedTextProps = TextProps & {
   color?: keyof ColorsKey["text"];
+  font?: keyof typeof Fonts;
+  bold?: boolean;
   type?:
     | "default"
     | "title"
@@ -17,6 +24,8 @@ export default function ThemedText({
   style,
   color,
   type = "default",
+  font = "sans",
+  bold = false,
   ...rest
 }: ThemedTextProps) {
   return (
@@ -24,8 +33,10 @@ export default function ThemedText({
       style={[
         {
           color: (color && Colors.text[color]) || Colors.text.white,
-          fontFamily: Fonts.sans,
+          fontFamily: Fonts[font],
         },
+        bold ? FontStyles.bold : undefined,
+        ,
         type === "default" ? styles.default : undefined,
         type === "title" ? styles.title : undefined,
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
