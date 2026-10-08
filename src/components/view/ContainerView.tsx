@@ -22,12 +22,11 @@ export default function ContainerView({
   const ThemedView = (
     <View
       style={[
-        styles.container,
+        noFlex ? {} : styles.flexContainer,
         {
           backgroundColor: gradient
             ? "transparent"
             : (color && Colors.background[color]) || Colors.background.black,
-          flex: noFlex ? 0 : 1,
         },
         style,
       ]}
@@ -49,7 +48,7 @@ export default function ContainerView({
 }
 
 const styles = StyleSheet.create({
-  container: {
+  flexContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
