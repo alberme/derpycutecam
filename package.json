@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/cedarville-cursive": "^0.4.1",
+    "@expo-google-fonts/fredoka": "^0.4.1",
     "@expo-google-fonts/nixie-one": "^0.4.1",
     "@expo/metro-runtime": "~57.0.3",
     "@expo/ui": "~57.0.20",
