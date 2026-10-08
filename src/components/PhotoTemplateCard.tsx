@@ -1,105 +1,90 @@
 import { Colors } from "@/src/constants/theme";
 import type { PhotoFrameCount } from "@/src/types/photo_frame";
-import { StyleSheet, View } from "react-native";
-
-interface PhotoFrameProps {
+import { StyleSheet, View, type ViewStyle } from "react-native";
+import ContainerView from "./view/ContainerView";
+interface PhotoTemplateCardProps {
   frameCount: PhotoFrameCount;
 }
 
-export default function PhotoTemplateCard({ frameCount }: PhotoFrameProps) {
-  const renderSlot = () => {
-    switch (frameCount) {
+interface PhotoSlotProps {
+  style?: ViewStyle;
+  noFlex?: boolean;
+}
+
+function PhotoSlot({ style, noFlex = false }: PhotoSlotProps) {
+  return <ContainerView color="blackPink" noFlex={noFlex} style={style} />;
+}
+
+function ThreePhotoLayout() {
+  return (
+    <View style={styles.threeLayout}>
+      <View style={styles.twoColumnRow}>
+        <PhotoSlot />
+        <PhotoSlot />
+      </View>
+      <PhotoSlot />
+    </View>
+  );
+}
+
+function SixPhotoLayout() {
+  return (
+    <View style={styles.sixLayout}>
+      {Array.from({ length: 6 }, (_, index) => (
+        <PhotoSlot key={index} noFlex style={styles.sixSlot} />
+      ))}
+    </View>
+  );
+}
+
+// add slot color prop
+export default function PhotoTemplateCard({
+  frameCount,
+}: PhotoTemplateCardProps) {
+  const photoLayout = (frames: PhotoFrameCount) => {
+    switch (frames) {
       case 1:
-        return <View style={[styles.slot, styles.single]} />;
-
+        return <PhotoSlot />;
       case 3:
-        return (
-          <View style={styles.grid3}>
-            {/* Top row */}
-            <View style={styles.row}>
-              <View style={[styles.slot, styles.half]} />
-              <View style={[styles.slot, styles.half]} />
-            </View>
-            {/* Bottom full-width slot */}
-            <View style={[styles.slot, styles.full]} />
-          </View>
-        );
-
+        return <ThreePhotoLayout />;
       case 6:
-        return (
-          <View style={styles.grid6}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <View key={i} style={styles.slot} />
-            ))}
-          </View>
-        );
-      default:
-        return null;
+        return <SixPhotoLayout />;
     }
   };
-
-  return <View style={styles.template}>{renderSlot()}</View>;
+  return (
+    <ContainerView noFlex style={styles.card}>
+      {photoLayout(frameCount)}
+    </ContainerView>
+  );
 }
 
 const styles = StyleSheet.create({
-  template: {
+  card: {
+    width: 147,
+    height: 178,
+    padding: 14,
+    paddingBottom: 40,
     backgroundColor: Colors.background.pink,
-    borderRadius: 18,
-    padding: 8,
-    aspectRatio: 3 / 4,
-    width: 220,
-    height: 300,
-    // justifyContent: "center",
   },
-  slot: {
-    backgroundColor: "white",
-    borderRadius: 8,
-    overflow: "hidden",
-    flexBasis: "45%", // two per row
-    aspectRatio: 1, // keeps squares
-    marginBottom: 6,
-    // width: "48%",
-  },
-  single: {
+
+  threeLayout: {
     flex: 1,
-    aspectRatio: 0,
-    justifyContent: "flex-start",
-    marginTop: 10,
-    marginBottom: 30,
-    marginHorizontal: 10,
-  },
-  // 3-photo layout
-  grid3: {
-    flex: 1,
-    justifyContent: "flex-start",
-    marginTop: 10,
-    marginHorizontal: 10,
-  },
-  row: {
     gap: 10,
+  },
+  twoColumnRow: {
+    flex: 1,
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
+    gap: 10,
   },
-  half: {
-    // width: "1%",
-    // aspectRatio: 1,
-  },
-  full: {
-    width: "100%",
-    // flexBasis: "90%", // override the half flex basis in slot
-    aspectRatio: 0,
-  },
-  // 6-photo layout
-  grid6: {
+  sixLayout: {
+    flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
-    // justifyContent: "space-between",
-    marginTop: 10,
-    marginBottom: 30,
-    marginHorizontal: 10,
-    flexBasis: "42%",
-    gap: 10,
-    // flex: 1,
+    justifyContent: "space-between",
+    alignContent: "space-between",
+  },
+  sixSlot: {
+    width: "47%",
+    height: "31%",
   },
 });
