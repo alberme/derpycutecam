@@ -12,6 +12,7 @@ export const Colors = {
   background: {
     black: "#151718",
     pink: "#FFCEEE",
+    blackPink: "#7C6074",
     transparent: "transparent",
   },
   gradient: {
