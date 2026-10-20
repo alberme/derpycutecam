@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,8 +9,17 @@ import { captureRef } from "react-native-view-shot";
 import ThemedButton from "@/src/components/ThemedButton";
 import ThemedText from "@/src/components/ThemedText";
 import { ContainerView, ScreenView } from "@/src/components/view";
+import {
+  createPhotoPrintHtml,
+  PHOTO_FRAME_ASPECT_RATIO,
+} from "@/src/constants/photo_frame_layout";
 import { Colors } from "@/src/constants/theme";
-import type { PhotoFrameSettings } from "@/src/types/photo_frame";
+import { useLayoutSize } from "@/src/hooks/useLayoutSize";
+import type {
+  PhotoFrameSettings,
+  PhotoSnappedSet,
+} from "@/src/types/photo_frame";
+import PhotoCard from "../components/PhotoCard";
 
 type PhotoPrintSettings = {
   isPrinting: boolean;
@@ -21,15 +29,21 @@ type PhotoPrintSettings = {
 };
 
 export default function PhotoshootFinish() {
-  const { selectedFrameSettings, photoUri } = useLocalSearchParams<{
+  const { selectedFrameSettings, photoUris } = useLocalSearchParams<{
     selectedFrameSettings: string;
-    photoUri: string;
+    photoUris: string;
   }>();
   const { width, height } = useWindowDimensions();
   const router = useRouter();
 
   const [photoFrameSettings] = useState<PhotoFrameSettings>(
     JSON.parse(selectedFrameSettings),
+  );
+  const photoUriSet = JSON.parse(photoUris) as PhotoSnappedSet;
+  const { size: previewSize, onLayout: onPreviewLayout } = useLayoutSize();
+  const compositionWidth = Math.min(
+    previewSize.width,
+    previewSize.height * PHOTO_FRAME_ASPECT_RATIO,
   );
   const [printSettings, setPrintSettings] = useState<PhotoPrintSettings>({
     isPrinting: false,
@@ -94,7 +108,7 @@ export default function PhotoshootFinish() {
           format: "png",
           quality: 1,
           width: 1200,
-          height: 1800,
+          height: Math.round(1200 / PHOTO_FRAME_ASPECT_RATIO),
         });
         console.log("✅ Merged image saved:", photoUri);
       } catch (err) {
@@ -105,77 +119,10 @@ export default function PhotoshootFinish() {
   };
 
   const printPhoto = async (photoUri: string, printer: Print.Printer) => {
-    // const oldhtml = `<html><body><img src="${photoUri}" style="width:100%;height:auto;"/></body></html>`
-    // const html = `
-    // <!doctype html>
-    // <html>
-    //   <head>
-    //     <meta charset="utf-8">
-    //     <style>
-    //       @page {
-    //         size: 4in 6in;
-    //         margin: 0;
-    //         padding: 0;
-    //       }
-
-    //       html, body {
-    //         margin: 0;
-    //         padding: 0;
-    //         width: 100%;
-    //         height: 100%;
-    //         overflow: hidden;
-    //         background-color: black;
-    //       }
-
-    //       img {
-    //         position: absolute;
-    //         top: 0;
-    //         left: 0;
-    //         width: 100%;
-    //         height: 100%;
-    //         object-fit: contain;
-    //         object-position: center center;
-    //       }
-    //     </style>
-    //   </head>
-    //   <body>
-    //     <img src="${photoUri}" />
-    //   </body>
-    // </html>
-    // `;
-
-    const html = `
-      <html>
-        <head>
-        <meta charset="utf-8">
-        <style>
-          @page {
-            size: 4in 6in;
-            margin: 0;
-            padding: 0;
-          }
-
-          html, body {
-            margin: 0;
-            padding: 0;
-          }
-
-          img {
-            width: 100%;
-            height: auto;
-          }
-        </style>
-        </head>
-        <body>
-          <img src="${photoUri}" />
-        </body>
-      </html>
-    `;
-
     // On iOS/android prints the given html. On web prints the HTML from the current page.
     console.log("printing...");
     await Print.printAsync({
-      html,
+      html: createPhotoPrintHtml(photoUri),
       width: 1200,
       height: 1800,
       margins: {
@@ -208,33 +155,35 @@ export default function PhotoshootFinish() {
   return (
     <ScreenView>
       <ContainerView
-        color="pink"
+        gradient
         style={{
           paddingHorizontal: Math.min(40, width * 0.06),
           paddingVertical: Math.min(48, height * 0.06),
           justifyContent: "space-between",
         }}
       >
-        <ThemedText type="title" color="black">
+        <ThemedText type="xxl" color="white" font="fredoka">
           Enjoy!
         </ThemedText>
-        <View
-          ref={previewRef}
-          collapsable={false}
-          style={[
-            styles.previewContainer,
-            {
-              aspectRatio: 2 / 3,
-              maxHeight: height * 0.7,
-            },
-          ]}
-        >
-          <Image source={{ uri: photoUri }} style={styles.capturedImage} />
-          <Image
-            source={photoFrameSettings.frameOverlay}
-            style={styles.frameOverlay}
-            contentFit="contain"
-          />
+        <View style={styles.previewArea} onLayout={onPreviewLayout}>
+          {compositionWidth > 0 && (
+            <View
+              ref={previewRef}
+              collapsable={false}
+              style={[
+                styles.previewContainer,
+                {
+                  width: compositionWidth,
+                  aspectRatio: PHOTO_FRAME_ASPECT_RATIO,
+                },
+              ]}
+            >
+              <PhotoCard
+                photoUriSet={photoUriSet}
+                photoFrameSettings={photoFrameSettings}
+              />
+            </View>
+          )}
         </View>
         <View style={{ flexDirection: "row", gap: 30 }}>
           <ThemedButton
@@ -251,7 +200,7 @@ export default function PhotoshootFinish() {
             // onPress={() => router.push("/select_frame")} - for now go directly to template select
             onPress={() =>
               router.push({
-                pathname: "./index",
+                pathname: "./",
               })
             }
             disabled={printSettings.isPrinting}
@@ -274,15 +223,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  capturedSlotImage: {
+    position: "absolute",
+  },
   takePictureOverlay: {
     position: "absolute",
     top: "40%",
     alignSelf: "center",
-  },
-  frameOverlay: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
   },
   countdownOverlay: {
     position: "absolute",
@@ -315,8 +262,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  previewArea: {
+    flex: 1,
+    alignSelf: "stretch",
+    minHeight: 0,
+    marginVertical: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   previewContainer: {
-    height: "100%",
+    position: "relative",
+    overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
   },

@@ -1,9 +1,18 @@
 import { Colors } from "@/src/constants/theme";
 import type { PhotoFrameCount } from "@/src/types/photo_frame";
-import { StyleSheet, View, type ViewStyle } from "react-native";
+import { useEffect, useRef } from "react";
+import {
+  Animated,
+  Easing,
+  Platform,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from "react-native";
 import ContainerView from "./view/ContainerView";
 interface PhotoTemplateCardProps {
   frameCount: PhotoFrameCount;
+  selected?: boolean;
 }
 
 interface PhotoSlotProps {
@@ -40,7 +49,21 @@ function SixPhotoLayout() {
 // add slot color prop
 export default function PhotoTemplateCard({
   frameCount,
+  selected = false,
 }: PhotoTemplateCardProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const animation = Animated.timing(scale, {
+      toValue: selected ? 1.1 : 1,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: Platform.OS !== "web",
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [selected, scale]);
+
   const photoLayout = (frames: PhotoFrameCount) => {
     switch (frames) {
       case 1:
@@ -52,13 +75,21 @@ export default function PhotoTemplateCard({
     }
   };
   return (
-    <ContainerView noFlex style={styles.card}>
-      {photoLayout(frameCount)}
-    </ContainerView>
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <ContainerView noFlex style={styles.card}>
+        {photoLayout(frameCount)}
+      </ContainerView>
+      {selected && <View pointerEvents="none" style={styles.selectedBorder} />}
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  selectedBorder: {
+    ...StyleSheet.absoluteFill,
+    borderWidth: 6,
+    borderColor: Colors.background.white,
+  },
   card: {
     width: 147,
     height: 178,

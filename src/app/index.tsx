@@ -81,13 +81,13 @@ export default function Index() {
             <ThemedButton
               title="Start!"
               variant="secondary"
-              // onPress={() => router.push("/select_frame")} - for now go directly to theme select
-              onPress={() =>
-                router.push({
-                  pathname: "./select_theme",
-                  params: { selectedFrameCount: 1 },
-                })
-              }
+              onPress={() => router.push("/select_frame")}
+              // onPress={() =>
+              //   router.push({
+              //     pathname: "./select_theme",
+              //     params: { selectedFrameCount: 1 },
+              //   })
+              // }
             />
           </ContainerView>
           <ContainerView noFlex color="transparent" style={[styles.footer]}>
