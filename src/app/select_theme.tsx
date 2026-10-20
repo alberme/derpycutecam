@@ -1,125 +1,149 @@
 import ThemedButton from "@/src/components/ThemedButton";
 import ThemedText from "@/src/components/ThemedText";
 import { ContainerView, ScreenView } from "@/src/components/view";
-
+import {
+  PHOTO_FRAME_CARDS,
+  PHOTO_FRAME_CARD_COLORS,
+} from "@/src/constants/assets";
+import { Colors } from "@/src/constants/theme";
+import { useLayoutSize } from "@/src/hooks/useLayoutSize";
+import type { PhotoFrameCount } from "@/src/types/photo_frame";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Dimensions,
-  PanResponder,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
-import { PHOTO_FRAME_CARDS } from "@/src/constants/assets";
-import type {
-  PhotoFrameColor,
-  PhotoFrameCount,
-  PhotoTemplateByColor,
-} from "@/src/types/photo_frame";
-import { Colors } from "../constants/theme";
-type slideDirectionType = "left" | "right";
-
-const { width: WINDOW_WIDTH } = Dimensions.get("window");
+const TEMPLATE_COUNT = PHOTO_FRAME_CARD_COLORS.length;
+const CAROUSEL_COLORS = [
+  PHOTO_FRAME_CARD_COLORS[TEMPLATE_COUNT - 1],
+  ...PHOTO_FRAME_CARD_COLORS,
+  PHOTO_FRAME_CARD_COLORS[0],
+];
+const templateIndexForPage = (page: number) =>
+  (((page - 1) % TEMPLATE_COUNT) + TEMPLATE_COUNT) % TEMPLATE_COUNT;
 
 export default function SelectTheme() {
   const { selectedFrameCount } = useLocalSearchParams<{
     selectedFrameCount: string;
   }>();
-  const [selectedPhotoTemplates] = useState<PhotoTemplateByColor>(
-    PHOTO_FRAME_CARDS[Number(selectedFrameCount) as PhotoFrameCount],
-  );
-  const [currentTemplateViewColor, setCurrentTemplateViewColor] =
-    useState<PhotoFrameColor>("black");
+  const templates =
+    PHOTO_FRAME_CARDS[Number(selectedFrameCount) as PhotoFrameCount];
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const indexRef = useRef(0);
+  const pageRef = useRef(1);
+  const carouselRef = useRef<ScrollView>(null);
+  const { size, onLayout } = useLayoutSize();
   const router = useRouter();
-  const translateX = useRef(new Animated.Value(0)).current;
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (e, gesture) => Math.abs(gesture.dx) > 10,
-      onPanResponderMove: (e, gesture) => {
-        translateX.setValue(gesture.dx);
-      },
-      onPanResponderRelease: (e, gesture) => {
-        const swipeThreshold = 100;
-        if (gesture.dx > swipeThreshold) {
-          slideTo("right");
-        } else if (gesture.dx < -swipeThreshold) {
-          slideTo("left");
-        } else {
-          // snap back to center
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    }),
-  ).current;
-  const slideTo = (direction: slideDirectionType) => {
-    const toValue = direction === "left" ? -WINDOW_WIDTH : WINDOW_WIDTH;
-    const templatesByColor =
-      PHOTO_FRAME_CARDS[Number(selectedFrameCount) as PhotoFrameCount];
-    const templateColors = Object.keys(templatesByColor) as PhotoFrameColor[];
+  const pageWidth = size.width;
+  const imageWidth = Math.min(pageWidth, size.height * (2 / 3));
 
-    Animated.timing(translateX, {
-      toValue,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => {
-      setCurrentTemplateViewColor((prev) => {
-        const templateColorIndex = templateColors.indexOf(prev);
-        return direction === "left"
-          ? templateColors[
-              (templateColorIndex - 1 + templateColors.length) %
-                templateColors.length
-            ]
-          : templateColors[(templateColorIndex + 1) % templateColors.length];
-      });
-    });
+  // Sentinel slides at either end allow swipes to continue in both directions.
+  const recenter = () => {
+    const page = templateIndexForPage(pageRef.current) + 1;
+    pageRef.current = page;
+    carouselRef.current?.scrollTo({ x: page * pageWidth, animated: false });
   };
-  const handlePrev = () => slideTo("left");
-  const handleNext = () => slideTo("right");
 
   useEffect(() => {
-    // run on next frame after the new template has rendered
-    const raf = requestAnimationFrame(() => {
-      translateX.setValue(0);
+    pageRef.current = indexRef.current + 1;
+    carouselRef.current?.scrollTo({
+      x: pageRef.current * pageWidth,
+      animated: false,
     });
-    return () => cancelAnimationFrame(raf);
-  }, [currentTemplateViewColor, translateX]);
+  }, [pageWidth]);
+
+  const moveBy = (direction: number) => {
+    // Normalize an end clone first, including when arrows are tapped rapidly.
+    if (pageRef.current === 0 || pageRef.current === TEMPLATE_COUNT + 1)
+      recenter();
+    const nextPage = pageRef.current + direction;
+    pageRef.current = nextPage;
+    indexRef.current = templateIndexForPage(nextPage);
+    setSelectedIndex(indexRef.current);
+    carouselRef.current?.scrollTo({ x: nextPage * pageWidth, animated: true });
+  };
 
   return (
     <ScreenView>
-      <ContainerView gradient style={{ gap: 64 }}>
-        <ThemedText font="fredoka" type="xxl">
+      <ContainerView gradient style={styles.screen}>
+        <ThemedText font="fredoka" type="xxl" style={styles.heading}>
           select a template!
         </ThemedText>
-        <ContainerView color="transparent" style={styles.frameContainer}>
-          <TouchableOpacity style={styles.arrowButton} onPress={handlePrev}>
+        <View style={styles.carouselRow}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            accessibilityRole="button"
+            accessibilityLabel="Previous template"
+            onPress={() => moveBy(-1)}
+          >
             <ThemedText color="pink" type="xxl">
               ◀
             </ThemedText>
           </TouchableOpacity>
-
-          <Animated.View
-            {...panResponder.panHandlers}
-            style={{ transform: [{ translateX }] }}
+          <View style={styles.viewport} onLayout={onLayout}>
+            {pageWidth > 0 && size.height > 0 && (
+              <ScrollView
+                ref={carouselRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                bounces={false}
+                scrollEventThrottle={16}
+                style={styles.carousel}
+                contentOffset={{ x: pageWidth, y: 0 }}
+                onContentSizeChange={() => {
+                  carouselRef.current?.scrollTo({
+                    x: pageRef.current * pageWidth,
+                    animated: false,
+                  });
+                }}
+                onMomentumScrollEnd={({ nativeEvent }) => {
+                  pageRef.current = Math.round(
+                    nativeEvent.contentOffset.x / pageWidth,
+                  );
+                  recenter();
+                }}
+                onScroll={({ nativeEvent }) => {
+                  const page = Math.max(
+                    0,
+                    Math.min(
+                      TEMPLATE_COUNT + 1,
+                      Math.round(nativeEvent.contentOffset.x / pageWidth),
+                    ),
+                  );
+                  pageRef.current = page;
+                  const index = templateIndexForPage(page);
+                  indexRef.current = index;
+                  setSelectedIndex(index);
+                }}
+              >
+                {CAROUSEL_COLORS.map((color, page) => (
+                  <View
+                    key={`${color}-${page}`}
+                    style={[styles.page, { width: pageWidth }]}
+                  >
+                    <Image
+                      source={templates[color]}
+                      style={{ width: imageWidth, aspectRatio: 2 / 3 }}
+                      contentFit="contain"
+                      accessibilityLabel={`${color} frame template`}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            accessibilityRole="button"
+            accessibilityLabel="Next template"
+            onPress={() => moveBy(1)}
           >
-            <Image
-              source={selectedPhotoTemplates[currentTemplateViewColor]}
-              style={styles.frameImage}
-              contentFit="contain"
-            />
-          </Animated.View>
-
-          <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
             <ThemedText color="pink" type="xxl">
               ▶
             </ThemedText>
           </TouchableOpacity>
-        </ContainerView>
+        </View>
         <ThemedButton
           title="Gooo!"
           variant="secondary"
@@ -128,7 +152,7 @@ export default function SelectTheme() {
               pathname: "./camera_screen",
               params: {
                 selectedFrameCount,
-                selectedTemplateColor: currentTemplateViewColor,
+                selectedTemplateColor: PHOTO_FRAME_CARD_COLORS[selectedIndex],
               },
             })
           }
@@ -139,26 +163,48 @@ export default function SelectTheme() {
 }
 
 const styles = StyleSheet.create({
-  frameContainer: {
-    flex: 0,
-    flexBasis: "auto",
-    width: WINDOW_WIDTH * 0.9,
-    overflow: "hidden",
+  screen: {
+    gap: 24,
+    paddingVertical: 24,
+  },
+  heading: {
+    textAlign: "center",
+    paddingHorizontal: 16,
+  },
+  carouselRow: {
+    flex: 1,
+    minHeight: 0,
+    alignSelf: "stretch",
     flexDirection: "row",
-    gap: 20,
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 24,
   },
   arrowButton: {
-    width: 40,
-    borderRadius: 20,
+    width: 48,
+    minHeight: 48,
+    flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.background.transparent,
     shadowColor: Colors.background.pink,
     shadowOpacity: 1,
     shadowRadius: 20,
   },
-  frameImage: {
-    width: WINDOW_WIDTH * 0.6,
-    aspectRatio: 2 / 3,
+  arrowText: {
+    fontSize: 32,
+    lineHeight: 44,
+    textAlign: "center",
+  },
+  viewport: {
+    flex: 1,
+    alignSelf: "stretch",
+    overflow: "hidden",
+  },
+  carousel: {
+    flex: 1,
+  },
+  page: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
