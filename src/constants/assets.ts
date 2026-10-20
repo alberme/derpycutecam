@@ -55,3 +55,11 @@ export const PHOTO_FRAME_CARDS = Object.fromEntries(
     ),
   ]),
 ) as Record<PhotoFrameCount, PhotoTemplateByColor>;
+
+export const PRELOAD_ASSETS = [
+  require("@/assets/images/logo.png"),
+  ...Object.values(PHOTO_FRAME_CARD_ASSETS).flatMap((templates) =>
+    Object.values(templates),
+  ),
+  PHOTO_CAMERA_ASSETS.take_picture,
+];

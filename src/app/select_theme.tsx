@@ -19,6 +19,7 @@ import type {
   PhotoFrameCount,
   PhotoTemplateByColor,
 } from "@/src/types/photo_frame";
+import { Colors } from "../constants/theme";
 type slideDirectionType = "left" | "right";
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
@@ -91,13 +92,13 @@ export default function SelectTheme() {
 
   return (
     <ScreenView>
-      <ContainerView color="pink">
-        <ThemedText color="black" type="title">
-          select a theme!
+      <ContainerView gradient style={{ gap: 64 }}>
+        <ThemedText font="fredoka" type="xxl">
+          select a template!
         </ThemedText>
-        <ContainerView color="pink" style={styles.frameContainer}>
+        <ContainerView color="transparent" style={styles.frameContainer}>
           <TouchableOpacity style={styles.arrowButton} onPress={handlePrev}>
-            <ThemedText color="black" type="xxl">
+            <ThemedText color="pink" type="xxl">
               ◀
             </ThemedText>
           </TouchableOpacity>
@@ -109,12 +110,12 @@ export default function SelectTheme() {
             <Image
               source={selectedPhotoTemplates[currentTemplateViewColor]}
               style={styles.frameImage}
-              contentFit="scale-down"
+              contentFit="contain"
             />
           </Animated.View>
 
           <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <ThemedText color="black" type="xxl">
+            <ThemedText color="pink" type="xxl">
               ▶
             </ThemedText>
           </TouchableOpacity>
@@ -151,12 +152,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: Colors.background.transparent,
+    shadowColor: Colors.background.pink,
+    shadowOpacity: 1,
+    shadowRadius: 20,
   },
   frameImage: {
     width: WINDOW_WIDTH * 0.6,
-    aspectRatio: 9 / 16,
+    aspectRatio: 2 / 3,
   },
 });

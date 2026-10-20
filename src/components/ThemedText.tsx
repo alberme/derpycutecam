@@ -17,7 +17,9 @@ export type ThemedTextProps = TextProps & {
     | "subtitle"
     | "link"
     | "xl"
-    | "xxl";
+    | "xxl"
+    | "xxxl"
+    | "jumbo";
 };
 
 export default function ThemedText({
@@ -44,6 +46,8 @@ export default function ThemedText({
         type === "link" ? styles.link : undefined,
         type === "xl" ? styles.xl : undefined,
         type === "xxl" ? styles.xxl : undefined,
+        type === "xxxl" ? styles.xxxl : undefined,
+        type === "jumbo" ? styles.jumbo : undefined,
         style,
       ]}
       {...rest}
@@ -64,7 +68,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: "bold",
-    // lineHeight: 40,
   },
   subtitle: {
     fontSize: 20,
@@ -84,5 +87,15 @@ const styles = StyleSheet.create({
     fontSize: 60,
     fontWeight: "bold",
     lineHeight: 60,
+  },
+  xxxl: {
+    fontSize: 100,
+    fontWeight: "bold",
+    lineHeight: 100,
+  },
+  jumbo: {
+    fontSize: 250,
+    fontWeight: "bold",
+    lineHeight: 250,
   },
 });

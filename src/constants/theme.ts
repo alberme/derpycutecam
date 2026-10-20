@@ -6,12 +6,13 @@
 import { type GradientColors } from "@/src/types";
 import { Platform } from "react-native";
 
-const tintColorDark = "#fff";
+const tintColorDark = "#fff"; // ??????
 
 export const Colors = {
   background: {
     black: "#151718",
     pink: "#FFCEEE",
+    white: "#FFFFFF",
     blackPink: "#7C6074",
     transparent: "transparent",
   },
