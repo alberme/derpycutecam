@@ -78,6 +78,7 @@ export default function PhotoCard({
   activeSlot,
   children,
   animationSettings = {},
+  style,
 }: PhotoCardProps) {
   const cameraViewOpacity = useRef(new Animated.Value(1)).current;
   const totalSlots = photoFrameSettings.selectedFrameCount as PhotoFrameCount;
@@ -126,7 +127,7 @@ export default function PhotoCard({
       color="blackPink"
       noFlex
       collapsable={false}
-      style={styles.previewContainer}
+      style={[styles.previewContainer, style]}
     >
       {slots.map((bounds, index) => {
         const uri = photoUriSet[index + 1];

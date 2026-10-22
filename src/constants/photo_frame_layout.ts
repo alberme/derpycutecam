@@ -1,4 +1,7 @@
-export const PHOTO_FRAME_ASPECT_RATIO = 1200 / 1800;
+// the estimated dimensions for 100mm 148mm photo card at 300dpi
+export const PHOTO_FRAME_WIDTH = 1181;
+export const PHOTO_FRAME_HEIGHT = 1748;
+export const PHOTO_FRAME_ASPECT_RATIO = PHOTO_FRAME_WIDTH / PHOTO_FRAME_HEIGHT;
 
 // Bounds cover the transparent openings in the three-slot (1024 × 1533)
 // and six-slot (1200 × 1800) templates,
@@ -23,66 +26,61 @@ export const PHOTO_SLOT_BOUNDS = {
 
 export const createPhotoPrintHtml = (photoUri: string) => {
   return `
+  <!DOCTYPE html>
   <html>
-        <head>
-        <meta charset="utf-8">
-        <style>
-          @page {
-            size: 4in 6in;
-            margin: 0;
-            padding: 0;
-          }
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        @page {
+          size: 100mm 148mm;
+          margin: 0;
+        }
 
-          html, body {
-            margin: 0;
-            padding: 0;
-          }
+        html, body {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
 
-          img {
-            width: 100%;
-            height: auto;
-          }
-        </style>
-        </head>
-        <body>
-          <img src="${photoUri}" />
-        </body>
-      </html>
-    `;
+        img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: fill;
+        }
+      </style>
+    </head>
+    <body>
+      <img src="${photoUri}" />
+    </body>
+  </html>
+`;
 };
 
 // const oldhtml = `<html><body><img src="${photoUri}" style="width:100%;height:auto;"/></body></html>`
 // const html = `
-// <!doctype html>
 // <html>
 //   <head>
-//     <meta charset="utf-8">
-//     <style>
-//       @page {
-//         size: 4in 6in;
-//         margin: 0;
-//         padding: 0;
-//       }
+//   <meta charset="utf-8">
+//   <style>
+//     @page {
+//       size: 4in 6in;
+//       margin: 0;
+//       padding: 0;
+//     }
 
-//       html, body {
-//         margin: 0;
-//         padding: 0;
-//         width: 100%;
-//         height: 100%;
-//         overflow: hidden;
-//         background-color: black;
-//       }
+//     html, body {
+//       margin: 0;
+//       padding: 0;
+//     }
 
-//       img {
-//         position: absolute;
-//         top: 0;
-//         left: 0;
-//         width: 100%;
-//         height: 100%;
-//         object-fit: contain;
-//         object-position: center center;
-//       }
-//     </style>
+//     img {
+//       width: 100%;
+//       height: auto;
+//     }
+//   </style>
 //   </head>
 //   <body>
 //     <img src="${photoUri}" />

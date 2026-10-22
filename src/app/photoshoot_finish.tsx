@@ -1,20 +1,26 @@
-import * as ImageManipulator from "expo-image-manipulator";
 import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { shareAsync } from "expo-sharing";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { captureRef } from "react-native-view-shot";
-// import { PHOTO_CAMERA_IMAGES, PHOTO_FRAME_IMAGES } from "@/constants/assets";
+import {
+  PixelRatio,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { captureRef, releaseCapture } from "react-native-view-shot";
 
 import ThemedButton from "@/src/components/ThemedButton";
 import ThemedText from "@/src/components/ThemedText";
 import { ContainerView, ScreenView } from "@/src/components/view";
 import {
-  createPhotoPrintHtml,
   PHOTO_FRAME_ASPECT_RATIO,
+  PHOTO_FRAME_HEIGHT,
+  PHOTO_FRAME_WIDTH,
 } from "@/src/constants/photo_frame_layout";
-import { Colors } from "@/src/constants/theme";
 import { useLayoutSize } from "@/src/hooks/useLayoutSize";
+import { usePhotoExport } from "@/src/hooks/usePhotoExport";
 import type {
   PhotoFrameSettings,
   PhotoSnappedSet,
@@ -53,19 +59,20 @@ export default function PhotoshootFinish() {
   });
 
   const previewRef = useRef(null);
+  const { addPrintBorder, exportView } = usePhotoExport();
 
+  // saves photo card and sends print job
   useEffect(() => {
     const handleSaveAndPrint = async () => {
-      // iOS only {"name": "Canon SELPHY CP1500", "url": "ipps://CP15005dba73.local.:443/ipp/print"}
-      // const printer = await Print.selectPrinterAsync();
       const printer = {
         name: "Canon SELPHY CP1500",
         url: "ipps://CP15005dba73.local.:443/ipp/print",
       };
 
-      // console.log("Selected printer:", printer);
       const photoUri = await savePhoto();
       await printPhoto(photoUri, printer);
+      // dev test function to save the photo card locally
+      await sharePhoto(photoUri);
       setPrintSettings((prev) => ({
         ...prev,
         printerUri: printer.url || "",
@@ -80,37 +87,26 @@ export default function PhotoshootFinish() {
     }
   }, [printSettings.isPrinting]);
 
-  async function createPrintableImage(photoUri: string, overlayUri: string) {
-    // Step 1: get the base image dimensions
-    const targetWidth = 1800; // 6in * 300dpi
-    const targetHeight = 1200; // 4in * 300dpi (landscape)
-
-    // Step 2: start with a solid black base (blank PNG)
-    // expo-image-manipulator doesn’t support “fill color,”
-    // so we just start with a transparent base and overlay black via a rect.
-
-    // Step 3: resize your photo proportionally to fit
-    const resizedPhoto = await ImageManipulator.manipulateAsync(
-      photoUri,
-      [{ resize: { width: targetWidth, height: targetHeight } }],
-      { compress: 1, format: ImageManipulator.SaveFormat.PNG },
-    );
-
-    return resizedPhoto.uri;
-  }
-
   const savePhoto = async (): Promise<string> => {
     let photoUri = "";
+    let photoCardURI = "";
 
     if (previewRef.current) {
+      // iOS multiplies dimensions by device scale.
+      const captureScale = Platform.OS === "ios" ? PixelRatio.get() : 1;
       try {
-        photoUri = await captureRef(previewRef.current, {
-          format: "png",
+        photoCardURI = await captureRef(previewRef.current, {
+          format: "jpg",
           quality: 1,
-          width: 1200,
-          height: Math.round(1200 / PHOTO_FRAME_ASPECT_RATIO),
+          width: PHOTO_FRAME_WIDTH / captureScale,
+          height: PHOTO_FRAME_HEIGHT / captureScale,
         });
-        console.log("✅ Merged image saved:", photoUri);
+        console.log("✅ Photocard saved:", photoUri);
+
+        // add 12px white border around image to compensate the image overflow issue
+        photoUri = await addPrintBorder(photoCardURI);
+        /** implement qr code functionality here */
+        releaseCapture(photoCardURI);
       } catch (err) {
         console.error("❌ Capture error:", err);
       }
@@ -118,42 +114,22 @@ export default function PhotoshootFinish() {
     return photoUri;
   };
 
-  const printPhoto = async (photoUri: string, printer: Print.Printer) => {
-    // On iOS/android prints the given html. On web prints the HTML from the current page.
-    console.log("printing...");
-    await Print.printAsync({
-      html: createPhotoPrintHtml(photoUri),
-      width: 1200,
-      height: 1800,
-      margins: {
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      },
-      printerUrl: printer.url, // iOS only
+  // a tester function that allows us to save the photo locally
+  const sharePhoto = async (photoUri: string) => {
+    await shareAsync(photoUri, {
+      UTI: "public.jpeg",
+      mimeType: "image/jpeg",
     });
-    // const { uri } = await Print.printToFileAsync({
-    //   html,
-    //   width: 1200,
-    //   height: 1800,
-    //   margins: {
-    //     top: 0,
-    //     left: 0,
-    //     right: 0,
-    //     bottom: 0,
-    //   },
-    // });
-    // await shareAsync(uri, { UTI: ".pdf", mimeType: "application/pdf" });
   };
 
-  // const selectPrinter = async () => {
-  //   const printer = await Print.selectPrinterAsync(); // iOS only
-  //   setSelectedPrinter(printer);
-  // };
+  /** TODO: 1. send POST request with photoCardURI payload to the printer server 2. await status from printer */
+  const printPhoto = async (photoUri: string, printer: Print.Printer) => {
+    console.log("printing...");
+  };
 
   return (
     <ScreenView>
+      {exportView}
       <ContainerView
         gradient
         style={{
@@ -197,7 +173,6 @@ export default function PhotoshootFinish() {
           <ThemedButton
             title="Start Over!"
             variant="secondary"
-            // onPress={() => router.push("/select_frame")} - for now go directly to template select
             onPress={() =>
               router.push({
                 pathname: "./",
@@ -212,56 +187,6 @@ export default function PhotoshootFinish() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: Colors.background.pink,
-  },
-  camera: {
-    width: "100%",
-    height: "100%",
-  },
-  capturedImage: {
-    width: "100%",
-    height: "100%",
-  },
-  capturedSlotImage: {
-    position: "absolute",
-  },
-  takePictureOverlay: {
-    position: "absolute",
-    top: "40%",
-    alignSelf: "center",
-  },
-  countdownOverlay: {
-    position: "absolute",
-    top: "40%",
-    alignSelf: "center",
-  },
-  countdownText: {
-    color: "#fff",
-    fontSize: 80,
-    fontWeight: "bold",
-  },
-  captureButton: {
-    position: "absolute",
-    bottom: 50,
-    backgroundColor: "#f472b6",
-    paddingVertical: 16,
-    paddingHorizontal: 40,
-    borderRadius: 50,
-  },
-  retakeButton: {
-    position: "absolute",
-    bottom: 50,
-    backgroundColor: "#f472b6",
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
   previewArea: {
     flex: 1,
     alignSelf: "stretch",
@@ -273,16 +198,6 @@ const styles = StyleSheet.create({
   previewContainer: {
     position: "relative",
     overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  permissionButton: {
-    backgroundColor: "#f472b6",
-    padding: 12,
-    borderRadius: 8,
-  },
-  centered: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },

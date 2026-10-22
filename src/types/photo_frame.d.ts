@@ -1,7 +1,7 @@
 import type { Asset } from "expo-asset";
 import type { ImageTransition } from "expo-image";
 import type { ReactNode } from "react";
-import type { ColorValue } from "react-native";
+import type { ColorValue, StyleProp, ViewStyle } from "react-native";
 
 export type PhotoFrameCount = 1 | 3 | 6;
 export type PhotoFrameColor = "black" | "purple" | "green";
@@ -22,6 +22,7 @@ export interface PhotoCardTransition extends ImageTransition {
   onAnimationFinish?: () => void;
 }
 export interface PhotoCardProps {
+  style?: StyleProp<ViewStyle>;
   photoUriSet: PhotoSnappedSet;
   photoFrameSettings: PhotoFrameSettings;
   /** The slot number that should display an active photo or view, such as a live camera preview. */
