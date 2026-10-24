@@ -1,0 +1,19 @@
+{
+  "name": "derpycutecam-print-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "docker:build": "docker compose build --no-cache",
+    "docker:start": "docker compose up -d --build",
+    "docker:stop": "docker compose stop",
+    "docker:logs": "docker compose logs -f -n 10 derpycutecam-print-server",
+    "docker:restart": "npm run docker:stop && npm run docker:start"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "morgan": "^1.12.1",
+    "multer": "^1.4.5-lts.2"
+  }
+}
