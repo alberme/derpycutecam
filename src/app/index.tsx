@@ -4,7 +4,12 @@ import { ContainerView, ScreenView } from "@/src/components/view";
 import { Colors } from "@/src/constants/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { StyleSheet, useWindowDimensions, type ViewStyle } from "react-native";
+import {
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from "react-native";
 
 import { Directory, Paths } from "expo-file-system";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,14 +34,12 @@ async function clearCacheDirectory() {
 
 export default function Index() {
   const router = useRouter();
-  const { width: windowWidth } = useWindowDimensions();
-  const blurhash =
-    "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
+  const { height } = useWindowDimensions();
+  const compact = height < 500;
 
   useEffect(() => {
     clearCacheDirectory();
   }, []);
-  ``;
   return (
     <ScreenView>
       <LinearGradient
@@ -58,21 +61,28 @@ export default function Index() {
               derpycuteclub presents...
             </ThemedText>
           </ContainerView>
-          <ContainerView color="transparent" style={{ gap: 24 }}>
-            <Image
-              source={require("@/assets/images/logo.png")}
-              // placeholder={{ blurhash }}
-              contentFit="contain"
-              style={[styles.splashLogo]}
-              transition={1000}
-            />
+          <ContainerView
+            color="transparent"
+            style={[
+              styles.content,
+              { gap: compact ? 12 : 4, paddingVertical: compact ? 8 : 24 },
+            ]}
+          >
+            <View style={styles.logoArea}>
+              <Image
+                source={require("@/assets/images/logo.png")}
+                contentFit="contain"
+                style={styles.splashLogo}
+                transition={1000}
+              />
+            </View>
             <ThemedText
               font="cedarvilleCursive"
               style={{
-                fontSize: 40,
+                fontSize: compact ? 26 : 40,
                 color: Colors.text.pink,
                 textAlign: "center",
-                lineHeight: 60,
+                lineHeight: compact ? 36 : 60,
               }}
             >
               lets remember this night together!
@@ -82,12 +92,6 @@ export default function Index() {
               title="Start!"
               variant="secondary"
               onPress={() => router.push("/select_frame")}
-              // onPress={() =>
-              //   router.push({
-              //     pathname: "./select_theme",
-              //     params: { selectedFrameCount: 1 },
-              //   })
-              // }
             />
           </ContainerView>
           <ContainerView noFlex color="transparent" style={[styles.footer]}>
@@ -124,9 +128,19 @@ const styles = StyleSheet.create({
   footer: {
     ...headerFooterStyle,
   },
+  content: {
+    alignSelf: "stretch",
+    minHeight: 0,
+    paddingHorizontal: 16,
+  },
+  logoArea: {
+    flex: 1,
+    minHeight: 0,
+    width: "100%",
+  },
   splashLogo: {
     width: "100%",
-    aspectRatio: 3780 / 1772,
+    height: "100%",
   },
   button: {
     backgroundColor: "#FFFFFF",

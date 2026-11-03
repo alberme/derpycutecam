@@ -1,6 +1,5 @@
-import * as Print from "expo-print";
+import * as Crypto from "expo-crypto";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { shareAsync } from "expo-sharing";
 import { useEffect, useRef, useState } from "react";
 import {
   PixelRatio,
@@ -27,13 +26,6 @@ import type {
 } from "@/src/types/photo_frame";
 import PhotoCard from "../components/PhotoCard";
 
-type PhotoPrintSettings = {
-  isPrinting: boolean;
-  savedPhotoUri: string;
-  printerUri: string;
-  printerName: string;
-};
-
 export default function PhotoshootFinish() {
   const { selectedFrameSettings, photoUris } = useLocalSearchParams<{
     selectedFrameSettings: string;
@@ -51,80 +43,65 @@ export default function PhotoshootFinish() {
     previewSize.width,
     previewSize.height * PHOTO_FRAME_ASPECT_RATIO,
   );
-  const [printSettings, setPrintSettings] = useState<PhotoPrintSettings>({
-    isPrinting: false,
-    savedPhotoUri: "",
-    printerUri: "",
-    printerName: "",
-  });
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [printError, setPrintError] = useState<string | null>(null);
+  const preparing = useRef(false);
+  const active = useRef(true);
+  const preparedPrint = useRef<{ photoUri: string; requestId: string } | null>(null);
 
   const previewRef = useRef(null);
   const { addPrintBorder, exportView } = usePhotoExport();
 
-  // saves photo card and sends print job
   useEffect(() => {
-    const handleSaveAndPrint = async () => {
-      const printer = {
-        name: "Canon SELPHY CP1500",
-        url: "ipps://CP15005dba73.local.:443/ipp/print",
-      };
-
-      const photoUri = await savePhoto();
-      await printPhoto(photoUri, printer);
-      // dev test function to save the photo card locally
-      await sharePhoto(photoUri);
-      setPrintSettings((prev) => ({
-        ...prev,
-        printerUri: printer.url || "",
-        printerName: printer.name || "",
-        savedPhotoUri: photoUri,
-        isPrinting: false,
-      }));
-    };
-
-    if (printSettings.isPrinting) {
-      handleSaveAndPrint();
-    }
-  }, [printSettings.isPrinting]);
+    active.current = true;
+    return () => { active.current = false; };
+  }, []);
 
   const savePhoto = async (): Promise<string> => {
-    let photoUri = "";
-    let photoCardURI = "";
-
-    if (previewRef.current) {
-      // iOS multiplies dimensions by device scale.
-      const captureScale = Platform.OS === "ios" ? PixelRatio.get() : 1;
-      try {
-        photoCardURI = await captureRef(previewRef.current, {
-          format: "jpg",
-          quality: 1,
-          width: PHOTO_FRAME_WIDTH / captureScale,
-          height: PHOTO_FRAME_HEIGHT / captureScale,
-        });
-        console.log("✅ Photocard saved:", photoUri);
-
-        // add 12px white border around image to compensate the image overflow issue
-        photoUri = await addPrintBorder(photoCardURI);
-        /** implement qr code functionality here */
-        releaseCapture(photoCardURI);
-      } catch (err) {
-        console.error("❌ Capture error:", err);
-      }
+    if (!previewRef.current) {
+      throw new Error("Your photo is still loading. Please try again in a moment.");
     }
-    return photoUri;
-  };
-
-  // a tester function that allows us to save the photo locally
-  const sharePhoto = async (photoUri: string) => {
-    await shareAsync(photoUri, {
-      UTI: "public.jpeg",
-      mimeType: "image/jpeg",
+    const captureScale = Platform.OS === "ios" ? PixelRatio.get() : 1;
+    const photoCardUri = await captureRef(previewRef.current, {
+      format: "jpg",
+      quality: 1,
+      width: PHOTO_FRAME_WIDTH / captureScale,
+      height: PHOTO_FRAME_HEIGHT / captureScale,
     });
+    // Keep the 12px margin used for this printer's photo overflow.
+    try {
+      if (!active.current) throw new Error("Photo export cancelled.");
+      const photoUri = await addPrintBorder(photoCardUri);
+      if (!photoUri) throw new Error("Unable to prepare your photo. Please try again.");
+      return photoUri;
+    } finally {
+      releaseCapture(photoCardUri);
+    }
   };
 
-  /** TODO: 1. send POST request with photoCardURI payload to the printer server 2. await status from printer */
-  const printPhoto = async (photoUri: string, printer: Print.Printer) => {
-    console.log("printing...");
+  const handlePrint = async () => {
+    // A synchronous guard also blocks taps before React updates the button.
+    if (preparing.current) return;
+    preparing.current = true;
+    setIsPreparing(true);
+    setPrintError(null);
+    try {
+      preparedPrint.current ??= {
+        photoUri: await savePhoto(),
+        requestId: Crypto.randomUUID(),
+      };
+      // Returning to this preview resumes the same intended print.
+      if (active.current) {
+        router.navigate({ pathname: "/print", params: preparedPrint.current });
+      }
+    } catch (error) {
+      if (active.current) {
+        setPrintError(error instanceof Error ? error.message : "Unable to prepare your photo.");
+      }
+    } finally {
+      preparing.current = false;
+      if (active.current) setIsPreparing(false);
+    }
   };
 
   return (
@@ -161,24 +138,24 @@ export default function PhotoshootFinish() {
             </View>
           )}
         </View>
-        <View style={{ flexDirection: "row", gap: 30 }}>
+        {printError && (
+          <ThemedText accessibilityRole="alert" style={{ textAlign: "center", marginBottom: 16 }}>
+            {printError}
+          </ThemedText>
+        )}
+        <View style={styles.actions}>
           <ThemedButton
             title="Print!"
             variant="secondary"
-            onPress={() => {
-              setPrintSettings((prev) => ({ ...prev, isPrinting: true }));
-            }}
-            loading={printSettings.isPrinting}
+            onPress={handlePrint}
+            loading={isPreparing}
+            disabled={compositionWidth <= 0}
           />
           <ThemedButton
             title="Start Over!"
             variant="secondary"
-            onPress={() =>
-              router.push({
-                pathname: "./",
-              })
-            }
-            disabled={printSettings.isPrinting}
+            onPress={() => router.dismissTo("/")}
+            disabled={isPreparing}
           />
         </View>
       </ContainerView>
@@ -187,6 +164,12 @@ export default function PhotoshootFinish() {
 }
 
 const styles = StyleSheet.create({
+  actions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 16,
+  },
   previewArea: {
     flex: 1,
     alignSelf: "stretch",
