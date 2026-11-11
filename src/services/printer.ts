@@ -4,7 +4,9 @@ import { fetch } from "expo/fetch";
 import { Platform } from "react-native";
 
 import { PRINT_REQUEST_TIMEOUT, PRINT_SERVER } from "@/src/constants/printer";
-import type { PrintJob, PrintJobStatus, PrinterStatus } from "@/src/types/printer";
+import type { PrintJob, PrinterStatus } from "@/src/types/printer";
+
+import { isPrintJob, isPrinterStatus } from "@/src/util/printer";
 
 export class PrinterError extends Error {
   constructor(
@@ -16,32 +18,16 @@ export class PrinterError extends Error {
   }
 }
 
-const JOB_STATUSES: PrintJobStatus[] = [
-  "queued",
-  "waiting_for_printer",
-  "submitting",
-  "submitted",
-  "finished_in_cups",
-  "failed",
-  "cancelled",
-];
-
-function isPrintJob(data: unknown): data is PrintJob {
-  if (!data || typeof data !== "object") return false;
-  const job = data as Partial<PrintJob>;
-  return typeof job.id === "string" && !!job.id &&
-    !!job.status && JOB_STATUSES.includes(job.status);
-}
-
-function isPrinterStatus(data: unknown): data is PrinterStatus {
-  if (!data || typeof data !== "object") return false;
-  const status = data as Partial<PrinterStatus>;
-  const isReasons = (value: unknown) => value === undefined ||
-    (Array.isArray(value) && value.every((reason) => typeof reason === "string"));
-  return typeof status.state === "string" && typeof status.hasError === "boolean" &&
-    isReasons(status.reasons) && isReasons(status.errors);
-}
-
+/**
+ * fetch wrapper for calling the print server API
+ * @param path The API path to call, e.g. "/status" or "/jobs/:id"
+ * @param isValid A data guard function to validate response data
+ * @param options Additional fetch options to pass to the request
+ * @param signal Optional AbortSignal to cancel the request
+ * @param acceptUnavailable If true, allows a 503 response with valid data to be returned instead of throwing an error
+ * @returns Promise resolving to validated response from print server API
+ * @throws PrinterError if the request fails, the response is invalid, or the print server is unavailable
+ */
 async function requestPrinter<T>(
   path: string,
   isValid: (data: unknown) => data is T,
@@ -49,6 +35,19 @@ async function requestPrinter<T>(
   signal?: AbortSignal,
   acceptUnavailable = false,
 ): Promise<T> {
+  // Keep URL validation separate so request failures retain their actual cause.
+  try {
+    const url = new URL(PRINT_SERVER);
+    if (!["http:", "https:"].includes(url.protocol) || !url.hostname) {
+      throw new Error("Unsupported print server URL");
+    }
+  } catch {
+    throw new PrinterError(
+      "The print server URL is invalid. Please contact the booth host.",
+      false,
+    );
+  }
+
   const apiKey = Constants.expoConfig?.extra?.printerApiKey;
   if (typeof apiKey !== "string" || !apiKey.trim()) {
     throw new PrinterError(
@@ -77,7 +76,10 @@ async function requestPrinter<T>(
 
     // /status uses HTTP 503 for a known, unavailable physical printer.
     // This is useful status data, rather than a failed connection to the API.
-    if (!response.ok && !(acceptUnavailable && response.status === 503 && isValid(data))) {
+    if (
+      !response.ok &&
+      !(acceptUnavailable && response.status === 503 && isValid(data))
+    ) {
       const message =
         response.status === 401
           ? "Printer authentication failed. Please contact the booth host."
@@ -116,10 +118,17 @@ export function getPrintJob(
   jobId: string,
   signal?: AbortSignal,
 ): Promise<PrintJob> {
-  return requestPrinter(`/jobs/${encodeURIComponent(jobId)}`, isPrintJob, {}, signal);
+  return requestPrinter(
+    `/jobs/${encodeURIComponent(jobId)}`,
+    isPrintJob,
+    {},
+    signal,
+  );
 }
 
-export function getPrinterStatus(signal?: AbortSignal): Promise<PrinterStatus> {
+export async function getPrinterStatus(
+  signal?: AbortSignal,
+): Promise<PrinterStatus> {
   return requestPrinter("/status", isPrinterStatus, {}, signal, true);
 }
 
