@@ -1,17 +1,22 @@
 ---
 name: Feature
-about: List feature for this project
+about: Story template for features
 title: "[feat]"
 labels: ''
-assignees: ''
+assignees: alberme
 
 ---
 
-**Description**
+# Description
 As a user, ...
 
-**User Expectations**
-* List functionalities of this feature 
+# User Expectations
+### Functionality Group X
+* List functionalities of this feature in user friendly context.
 
-**Developer Dependencies**
-* List features or code dependencies that this feature will depend on
+# Developer Expectations
+### Functionality Group X
+* List developer dependencies of this feature in developer context.
+
+# Out Of Scope
+* List future functionality/ideas for this feature that should be implemented in a future feature ticket.
