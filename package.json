@@ -9,7 +9,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test:printer": "node --test print-server/test/printer-service.test.cjs print-server/test/printer-upload.test.cjs"
   },
   "dependencies": {
     "@expo-google-fonts/cedarville-cursive": "^0.4.1",

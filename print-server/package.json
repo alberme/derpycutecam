@@ -9,7 +9,8 @@
     "docker:start": "docker compose up -d --build",
     "docker:stop": "docker compose stop",
     "docker:logs": "docker compose logs -f -n 10 derpycutecam-print-server",
-    "docker:restart": "npm run docker:stop && npm run docker:start"
+    "docker:restart": "npm run docker:stop && npm run docker:start",
+    "test": "node --test print-server/test/*.test.cjs"
   },
   "dependencies": {
     "express": "^4.21.2",

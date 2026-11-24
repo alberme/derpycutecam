@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { Buffer } = require("node:buffer");
 const { test } = require("node:test");
 const { loadTs } = require("./helpers/load-typescript.cjs");
+const { loadPrinterService } = require("./helpers/load-printer-service.cjs");
 
 // Run the installed Expo serializer, stubbing only native modules. A mock of
 // fetch alone would accept the old URI object and miss this SDK regression.
@@ -23,13 +24,9 @@ class NativeFile {
 }
 
 function printerService(platform, fetch) {
-  return loadTs("src/services/printer.ts", {
-    "expo-constants": { expoConfig: { extra: { printerApiKey: "test-key" } } },
-    "expo-file-system": { File: NativeFile },
-    "expo/fetch": { fetch },
-    "react-native": { Platform: { OS: platform } },
-    "@/src/constants/printer": { PRINT_SERVER: "http://booth:3000", PRINT_REQUEST_TIMEOUT: 1000 },
-  }, { FormData: ExpoFormData });
+  return loadPrinterService({
+    platform, fetch, File: NativeFile, globals: { FormData: ExpoFormData },
+  });
 }
 
 async function serializePhoto(options) {
