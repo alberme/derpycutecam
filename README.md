@@ -1,5 +1,7 @@
 # derpycutecam
 
+[![Printer tests](https://github.com/alberme/derpycutecam/actions/workflows/printer-tests.yml/badge.svg)](https://github.com/alberme/derpycutecam/actions/workflows/printer-tests.yml)
+
 ![derpycutecam](https://github.com/alberme/derpycutecam/blob/main/assets/images/derpycutecam-splash-gh.png?raw=true)
 
 From the co-owners of derpycuteclub, a prototype mobile booth app designed for mobile setups. Modern day smartphones have powerful cameras comparable to DSLR cameras. By leveraging the power of a smartphone camera, small business owners can create and setup their own mobile booth setup with their smartphone and a dash of creativity.
