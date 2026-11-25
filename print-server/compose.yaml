@@ -1,0 +1,23 @@
+services:
+  derpycutecam:
+    build: .
+    container_name: print-server
+
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      PORT: "3000"
+      PRINTER_NAME: derpcutecam_CP1500
+      PRINTER_URI: ipp://10.10.10.101:631/ipp/print
+      API_KEY: ${API_KEY}
+
+    volumes:
+      - cups-config:/etc/cups
+      - cups-spool:/var/spool/cups
+
+volumes:
+  cups-config:
+  cups-spool:
